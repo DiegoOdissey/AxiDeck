@@ -1,0 +1,10 @@
+{
+  "profiles": {
+    "AxiApp (Package)": {
+      "commandName": "MsixPackage"
+    },
+    "AxiApp (Unpackaged)": {
+      "commandName": "Project"
+    }
+  }
+}

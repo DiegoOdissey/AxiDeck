@@ -1,0 +1,104 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Window
+    x:Class="AxiApp.MainWindow"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    Title="AxiDeck">
+
+    <Grid Padding="24"
+            RowSpacing="16">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <!-- Header -->
+            <RowDefinition Height="Auto"/>
+            <!-- Status -->
+            <RowDefinition Height="Auto"/>
+            <!-- Buttons -->
+            <RowDefinition Height="Auto"/>
+            <!-- Log toggle -->
+            <RowDefinition Height="Auto"/>
+            <!-- Log panel -->
+        </Grid.RowDefinitions>
+
+        <!-- ── Row 0 — Title + dot ── -->
+        <StackPanel Grid.Row="0"
+                Orientation="Horizontal"
+                Spacing="12"
+                    VerticalAlignment="Center">
+            <TextBlock Text="AxiDeck"
+                       FontSize="22"
+                    FontWeight="SemiBold"
+                       VerticalAlignment="Center"/>
+            <Ellipse x:Name="StatusDot"
+                     Width="10"
+                    Height="10"
+                     Fill="Gray"
+                     VerticalAlignment="Center"/>
+        </StackPanel>
+
+        <!-- ── Row 1 — Status text ── -->
+        <TextBlock x:Name="StatusLabel"
+                   Grid.Row="1"
+                   Text="Starting..."
+                   Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                   FontSize="13"/>
+
+        <!-- ── Row 2 — Action buttons ── -->
+        <StackPanel Grid.Row="2"
+                Orientation="Horizontal"
+                Spacing="10">
+
+            <Button x:Name="ConnectButton"
+                    Content="Connect"
+                    Width="100"
+                    Style="{StaticResource AccentButtonStyle}"
+                    Click="ConnectButton_Click"/>
+
+            <Button x:Name="ResetButton"
+                    Content="Reset"
+                    Width="90"
+                    IsEnabled="False"
+                    Click="ResetButton_Click"/>
+
+            <Button x:Name="DisconnectButton"
+                    Content="Disconnect"
+                    Width="110"
+                    IsEnabled="False"
+                    Click="DisconnectButton_Click"/>
+
+        </StackPanel>
+
+        <!-- ── Row 3 — Log toggle ── -->
+        <Button Grid.Row="3"
+                x:Name="LogToggleButton"
+                Content="▶  Show log"
+                FontSize="12"
+                Padding="8,4"
+                Background="Transparent"
+                BorderThickness="0"
+                Click="LogToggleButton_Click"/>
+
+        <!-- ── Row 4 — Collapsible log ── -->
+        <Border Grid.Row="4"
+                x:Name="LogPanel"
+                Visibility="Collapsed"
+                CornerRadius="8"
+                Background="{ThemeResource ControlFillColorDefaultBrush}"
+                BorderBrush="{ThemeResource ControlStrokeColorDefaultBrush}"
+                BorderThickness="1"
+                Padding="12"
+                Height="160">
+
+            <ScrollViewer x:Name="LogScroller"
+                    VerticalScrollBarVisibility="Auto">
+                <TextBlock x:Name="LogBox"
+                           FontFamily="Consolas"
+                           FontSize="12"
+                           TextWrapping="Wrap"
+                           IsTextSelectionEnabled="True"/>
+            </ScrollViewer>
+
+        </Border>
+
+    </Grid>
+</Window>
