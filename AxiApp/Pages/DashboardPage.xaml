@@ -1,0 +1,146 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Page
+    x:Class="AxiApp.Pages.DashboardPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    Background="Transparent">
+
+    <Grid Padding="36,32,36,32">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <!-- Page title -->
+            <RowDefinition Height="24"/>
+            <!-- Spacer -->
+            <RowDefinition Height="*"/>
+            <!-- Cards -->
+        </Grid.RowDefinitions>
+
+        <!-- ── Page title ── -->
+        <TextBlock Grid.Row="0"
+                   Text="Dispositivi"
+                   FontSize="20"
+                FontWeight="SemiBold"
+                   Foreground="White"/>
+
+        <!-- ── Device cards ── -->
+        <ItemsControl Grid.Row="2"
+                x:Name="DeviceGrid">
+            <ItemsControl.ItemsPanel>
+                <ItemsPanelTemplate>
+                    <ItemsWrapGrid Orientation="Horizontal"/>
+                </ItemsPanelTemplate>
+            </ItemsControl.ItemsPanel>
+
+            <!-- AxiDeck card -->
+            <Button x:Name="AxiDeckCard"
+                    Width="176"
+                    Height="220"
+                    Padding="0"
+                    Background="#1E1E1E"
+                    BorderThickness="1"
+                    BorderBrush="#2A2A2A"
+                    CornerRadius="12"
+                    Margin="0,0,16,16"
+                    Click="AxiDeckCard_Click">
+
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="*"/>
+                        <!-- Thumbnail -->
+                        <RowDefinition Height="Auto"/>
+                        <!-- Name + dot -->
+                    </Grid.RowDefinitions>
+
+                    <!-- Thumbnail area -->
+                    <Border Grid.Row="0"
+                            CornerRadius="12,12,0,0"
+                            Background="#252525"
+                            Margin="0">
+
+                        <Image x:Name="AxiDeckThumb"
+                               Source="ms-appx:///Assets/AxiDeck.png"
+                               Stretch="Uniform"
+                               Margin="0"/>
+
+                    </Border>
+
+                    <!-- Name + status dot -->
+                    <Grid Grid.Row="1"
+                          Padding="14,10,14,12">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+
+                        <TextBlock Grid.Column="0"
+                                   Text="AxiDeck"
+                                   FontSize="14"
+                                FontWeight="SemiBold"
+                                   Foreground="White"
+                                   VerticalAlignment="Center"/>
+
+                        <Ellipse x:Name="AxiDeckDot"
+                                 Grid.Column="1"
+                                 Width="8"
+                                Height="8"
+                                 Fill="#CC3333"
+                                 VerticalAlignment="Center"/>
+                    </Grid>
+
+                </Grid>
+            </Button>
+
+            <!-- PorcelliDash card -->
+            <Button x:Name="PorcelliDashCard"
+                    Width="176"
+                    Height="220"
+                    Padding="0"
+                    Background="#1E1E1E"
+                    BorderThickness="1"
+                    BorderBrush="#2A2A2A"
+                    CornerRadius="12"
+                    Margin="0,0,16,16"
+                    Click="PorcelliDashCard_Click">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="*"/>
+                            <RowDefinition Height="Auto"/>
+                    </Grid.RowDefinitions>
+
+                    <Border Grid.Row="0"
+                            CornerRadius="12,12,0,0"
+                            Background="#252525"
+                            Margin="0">
+                        <Image x:Name="PorcelliDashThumb"
+                               Source="ms-appx:///Assets/PorcelliDash.png"
+                               Stretch="Uniform"
+                               Margin="0"/>
+                    </Border>
+
+                    <Grid Grid.Row="1"
+                          Padding="14,10,14,12">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+
+                        <TextBlock Grid.Column="0"
+                                   Text="PorcelliDash"
+                                   FontSize="14"
+                                   FontWeight="SemiBold"
+                                   Foreground="White"
+                                   VerticalAlignment="Center"/>
+
+                        <Ellipse x:Name="PorcelliDashDot"
+                                 Grid.Column="1"
+                                 Width="8"
+                                 Height="8"
+                                 Fill="#CC3333"
+                                 VerticalAlignment="Center"/>
+                    </Grid>
+                </Grid>
+            </Button>
+
+        </ItemsControl>
+    </Grid>
+</Page>

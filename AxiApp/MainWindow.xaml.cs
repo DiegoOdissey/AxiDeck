@@ -1,7 +1,7 @@
-using Microsoft.UI;
 using Microsoft.UI.Xaml;
-using Microsoft.UI.Xaml.Media;
+using Microsoft.UI.Xaml.Media.Animation;
 using System;
+using AxiApp.Pages;
 
 namespace AxiApp
 {
@@ -10,135 +10,109 @@ namespace AxiApp
         // ─────────────────────────────────────────────
         //  DEBUG
         // ─────────────────────────────────────────────
-        private const bool DebugSimulateConnected = true; // ← flip to true to preview connected UI
+        private const bool DebugSimulateConnected = true;
+
+        // ─────────────────────────────────────────────
+        //  STATE
+        // ─────────────────────────────────────────────
+        public readonly SerialManager Serial = new();
+        private bool _detailOpen = false;
 
         // ─────────────────────────────────────────────
         //  SETUP
         // ─────────────────────────────────────────────
-        private readonly SerialManager _serial = new();
-        private bool _logVisible = false;
-
         public MainWindow()
         {
             InitializeComponent();
 
-            // Window minimum size
-            var hwnd = WinRT.Interop.WindowNative.GetWindowHandle(this);
-            var windowId = Microsoft.UI.Win32Interop.GetWindowIdFromWindow(hwnd);
-            var appWindow = Microsoft.UI.Windowing.AppWindow.GetFromWindowId(windowId);
-            appWindow.Resize(new Windows.Graphics.SizeInt32(420, 220));
+            // Window size — compact on start
+            SetWindowSize(1420, 760);
 
-            if (DebugSimulateConnected)
+            // Force dark theme on the root
+            RootGrid.RequestedTheme = ElementTheme.Dark;
+
+            // Navigate to dashboard
+            MainFrame.Navigate(typeof(DashboardPage), this,
+                new SuppressNavigationTransitionInfo());
+
+            // Start serial
+            if (!DebugSimulateConnected)
+                Serial.Start();
+        }
+
+        // ─────────────────────────────────────────────
+        //  PANEL OPEN / CLOSE
+        // ─────────────────────────────────────────────
+        public void OpenDetailPanel(Type pageType)
+        {
+            if (!_detailOpen)
             {
-                // Bypass serial entirely — just paint the UI as connected
-                SimulateConnected();
-                return;
+                _detailOpen = true;
+                DetailCol.Width = new GridLength(480);
+                DetailDivider.Visibility = Visibility.Visible;
             }
 
-            _serial.ConnectionChanged += OnConnectionChanged;
-            _serial.StatusChanged += OnStatusChanged;
-            _serial.MessageReceived += OnMessageReceived;
-            _serial.Start();
+            DetailFrame.Navigate(pageType, this,
+                new SlideNavigationTransitionInfo
+                {
+                    Effect = SlideNavigationTransitionEffect.FromRight
+                });
+        }
+
+        public void CloseDetailPanel()
+        {
+            _detailOpen = false;
+            DetailCol.Width = new GridLength(0);
+            DetailDivider.Visibility = Visibility.Collapsed;
+            DetailFrame.Content = null;
         }
 
         // ─────────────────────────────────────────────
-        //  DEBUG HELPER
+        //  SIDEBAR NAV
         // ─────────────────────────────────────────────
-        private void SimulateConnected()
+        private void NavDevices_Click(object sender, RoutedEventArgs e)
         {
-            StatusDot.Fill = new SolidColorBrush(Colors.LimeGreen);
-            StatusLabel.Text = "Connected on COM3 (simulated)";
-            ConnectButton.IsEnabled = false;
-            DisconnectButton.IsEnabled = true;
-            ResetButton.IsEnabled = true;
-            AppendLog("[debug] Simulated connection active.");
+            SetNavActive(NavDevices, NavSettings);
+            CloseDetailPanel();
+            MainFrame.Navigate(typeof(DashboardPage), this,
+                new SuppressNavigationTransitionInfo());
         }
 
-        // ─────────────────────────────────────────────
-        //  SERIAL EVENT HANDLERS
-        // ─────────────────────────────────────────────
-        private void OnConnectionChanged(bool connected)
+        private void NavSettings_Click(object sender, RoutedEventArgs e)
         {
-            DispatcherQueue.TryEnqueue(() =>
-            {
-                StatusDot.Fill = connected
-                    ? new SolidColorBrush(Colors.LimeGreen)
-                    : new SolidColorBrush(Colors.Gray);
-
-                ConnectButton.IsEnabled = !connected;
-                DisconnectButton.IsEnabled = connected;
-                ResetButton.IsEnabled = connected;
-            });
+            SetNavActive(NavSettings, NavDevices);
+            CloseDetailPanel();
+            // Future: MainFrame.Navigate(typeof(SettingsPage), this, ...);
         }
 
-        private void OnStatusChanged(string text)
+        private void CheckUpdates_Click(object sender, RoutedEventArgs e)
         {
-            DispatcherQueue.TryEnqueue(() =>
-            {
-                StatusLabel.Text = text;
-                AppendLog($"[status] {text}");
-            });
+            // Future: check GitHub releases API
         }
 
-        private void OnMessageReceived(string line)
+        private static void SetNavActive(
+            Microsoft.UI.Xaml.Controls.Button active,
+            Microsoft.UI.Xaml.Controls.Button inactive)
         {
-            DispatcherQueue.TryEnqueue(() =>
-            {
-                AppendLog($"[arduino] {line}");
-            });
+            active.Background = new Microsoft.UI.Xaml.Media.SolidColorBrush(
+                                      Microsoft.UI.ColorHelper.FromArgb(255, 34, 34, 34));
+            active.Foreground = new Microsoft.UI.Xaml.Media.SolidColorBrush(
+                                      Microsoft.UI.Colors.White);
+            inactive.Background = new Microsoft.UI.Xaml.Media.SolidColorBrush(
+                                      Microsoft.UI.Colors.Transparent);
+            inactive.Foreground = new Microsoft.UI.Xaml.Media.SolidColorBrush(
+                                      Microsoft.UI.ColorHelper.FromArgb(255, 136, 136, 136));
         }
 
         // ─────────────────────────────────────────────
-        //  BUTTON HANDLERS
+        //  HELPERS
         // ─────────────────────────────────────────────
-        private void ConnectButton_Click(object sender, RoutedEventArgs e)
+        private void SetWindowSize(int width, int height)
         {
-            AppendLog("[app] Reconnecting...");
-            _serial.Start();
-        }
-
-        private void ResetButton_Click(object sender, RoutedEventArgs e)
-        {
-            AppendLog("[app] Reset requested.");
-            _serial.Reset();
-        }
-
-        private void DisconnectButton_Click(object sender, RoutedEventArgs e)
-        {
-            AppendLog("[app] Disconnected.");
-            _serial.Stop();
-
-            DispatcherQueue.TryEnqueue(() =>
-            {
-                StatusDot.Fill = new SolidColorBrush(Colors.Gray);
-                StatusLabel.Text = "Disconnected (manual)";
-                ConnectButton.IsEnabled = true;
-                DisconnectButton.IsEnabled = false;
-                ResetButton.IsEnabled = false;
-            });
-        }
-
-        private void LogToggleButton_Click(object sender, RoutedEventArgs e)
-        {
-            _logVisible = !_logVisible;
-            LogPanel.Visibility = _logVisible ? Visibility.Visible : Visibility.Collapsed;
-            LogToggleButton.Content = _logVisible ? "▼  Hide log" : "▶  Show log";
-
-            // Grow/shrink window with the panel
             var hwnd = WinRT.Interop.WindowNative.GetWindowHandle(this);
             var windowId = Microsoft.UI.Win32Interop.GetWindowIdFromWindow(hwnd);
             var appWindow = Microsoft.UI.Windowing.AppWindow.GetFromWindowId(windowId);
-            appWindow.Resize(new Windows.Graphics.SizeInt32(420, _logVisible ? 420 : 220));
-        }
-
-        // ─────────────────────────────────────────────
-        //  LOG HELPER
-        // ─────────────────────────────────────────────
-        private void AppendLog(string line)
-        {
-            string timestamp = DateTime.Now.ToString("HH:mm:ss");
-            LogBox.Text += $"{timestamp}  {line}\n";
-            LogScroller.ChangeView(null, LogScroller.ScrollableHeight, null);
+            appWindow.Resize(new Windows.Graphics.SizeInt32(width, height));
         }
     }
 }
