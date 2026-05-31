@@ -33,8 +33,8 @@
 
             <!-- AxiDeck card -->
             <Button x:Name="AxiDeckCard"
-                    Width="176"
-                    Height="220"
+                    Width="220"
+                    Height="280"
                     Padding="0"
                     Background="#1E1E1E"
                     BorderThickness="1"
@@ -92,8 +92,8 @@
 
             <!-- PorcelliDash card -->
             <Button x:Name="PorcelliDashCard"
-                    Width="176"
-                    Height="220"
+                    Width="220"
+                    Height="280"
                     Padding="0"
                     Background="#1E1E1E"
                     BorderThickness="1"
@@ -141,6 +141,53 @@
                 </Grid>
             </Button>
 
+            <!-- Coming soon card -->
+            <Border Width="200"
+                    Height="250"
+                    Background="#2A2A2A"
+                    BorderThickness="1"
+                    BorderBrush="#444444"
+                    CornerRadius="12"
+                    Margin="0,0,16,16"
+                    Opacity="0.85">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="*"/>
+                        <RowDefinition Height="Auto"/>
+                    </Grid.RowDefinitions>
+
+                    <Border Grid.Row="0"
+                            CornerRadius="12,12,0,0"
+                            Background="#333333"
+                            Margin="0">
+                        <FontIcon Glyph="&#xE710;"
+                                  FontSize="28"
+                                  Foreground="#888888"
+                                  HorizontalAlignment="Center"
+                                  VerticalAlignment="Center"/>
+                    </Border>
+
+                    <Grid Grid.Row="1"
+                          Padding="14,12,14,14">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                        </Grid.RowDefinitions>
+
+                        <TextBlock Grid.Row="0"
+                                   Text="Prossimo dispositivo"
+                                   FontSize="13"
+                                   FontWeight="SemiBold"
+                                   Foreground="#DDDDDD"
+                                   Margin="0,0,0,2"/>
+
+                        <TextBlock Grid.Row="1"
+                                   Text="In arrivo"
+                                   FontSize="11"
+                                   Foreground="#AAAAAA"/>
+                    </Grid>
+                </Grid>
+            </Border>
         </ItemsControl>
     </Grid>
 </Page>

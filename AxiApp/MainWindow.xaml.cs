@@ -26,7 +26,7 @@ namespace AxiApp
             InitializeComponent();
 
             // Window size — compact on start
-            SetWindowSize(1420, 760);
+            SetWindowSize(1600, 800);
 
             // Force dark theme on the root
             RootGrid.RequestedTheme = ElementTheme.Dark;

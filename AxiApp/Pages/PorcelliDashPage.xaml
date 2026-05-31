@@ -104,7 +104,7 @@
                         Foreground="#888888"
                         FontSize="12"
                         Click="UpdateFirmware_Click"/>
-                <Button Content="Ritorna a impostazioni di fabbrica"
+                <Button Content="Resetta"
                         Background="Transparent"
                         BorderBrush="#333333"
                         Foreground="#884444"
