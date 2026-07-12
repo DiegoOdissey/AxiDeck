@@ -167,7 +167,7 @@
 
         <!-- Version -->
         <TextBlock Grid.Row="3"
-                   Text="AxiApp v0.1 — github.com/yourrepo"
+                   Text="AxiApp v0.1 — github.com/DiegoOdissey/AxiDeck"
                    FontSize="11"
                 Foreground="#333333"
                    VerticalAlignment="Bottom"/>
