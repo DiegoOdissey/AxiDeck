@@ -1,0 +1,175 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Page
+    x:Class="AxiApp.Pages.SettingsPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    Background="Transparent">
+
+    <Grid Padding="36,32,36,32"
+            RowSpacing="24">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+
+        <!-- Title -->
+        <TextBlock Grid.Row="0"
+                   Text="Impostazioni"
+                   FontSize="20"
+                FontWeight="SemiBold"
+                   Foreground="White"/>
+
+        <!-- App behaviour -->
+        <StackPanel Grid.Row="1"
+                Spacing="16">
+            <TextBlock Text="APPLICAZIONE"
+                       FontSize="11"
+                    Foreground="#555555"
+                       CharacterSpacing="150"/>
+
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+                <StackPanel Grid.Column="0"
+                        Spacing="2">
+                    <TextBlock Text="Avvia con Windows"
+                               FontSize="13"
+                            Foreground="White"/>
+                    <TextBlock Text="Avvia AxiApp automaticamente all'accesso"
+                               FontSize="11"
+                            Foreground="#666666"/>
+                </StackPanel>
+                <ToggleSwitch x:Name="StartupToggle"
+                              Grid.Column="1"
+                              Toggled="StartupToggle_Toggled"
+                              OffContent=""
+                        OnContent=""
+                              VerticalAlignment="Center"/>
+            </Grid>
+
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+                <StackPanel Grid.Column="0"
+                        Spacing="2">
+                    <TextBlock Text="Minimizza nel tray"
+                               FontSize="13"
+                            Foreground="White"/>
+                    <TextBlock Text="Chiudendo la finestra, l'app continua in background"
+                               FontSize="11"
+                            Foreground="#666666"/>
+                </StackPanel>
+                <ToggleSwitch x:Name="TrayToggle"
+                              Grid.Column="1"
+                              Toggled="TrayToggle_Toggled"
+                              OffContent=""
+                        OnContent=""
+                              VerticalAlignment="Center"/>
+            </Grid>
+
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+                <StackPanel Grid.Column="0"
+                        Spacing="2">
+                    <TextBlock Text="Notifiche di connessione"
+                               FontSize="13"
+                            Foreground="White"/>
+                    <TextBlock Text="Notifica quando un dispositivo si connette o disconnette"
+                               FontSize="11"
+                            Foreground="#666666"/>
+                </StackPanel>
+                <ToggleSwitch x:Name="NotifyToggle"
+                              Grid.Column="1"
+                              Toggled="NotifyToggle_Toggled"
+                              OffContent=""
+                        OnContent=""
+                              VerticalAlignment="Center"/>
+            </Grid>
+        </StackPanel>
+
+        <!-- Device info -->
+        <StackPanel Grid.Row="2"
+                Spacing="12">
+            <TextBlock Text="DISPOSITIVO"
+                       FontSize="11"
+                    Foreground="#555555"
+                       CharacterSpacing="150"/>
+
+            <Border Background="#1A1A1A"
+                    CornerRadius="10"
+                    Padding="16"
+                    BorderBrush="#2A2A2A"
+                    BorderThickness="1">
+                <Grid RowSpacing="10">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                    </Grid.RowDefinitions>
+
+                    <Grid Grid.Row="0">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Text="Porta COM"
+                                   FontSize="12"
+                                Foreground="#888888"/>
+                        <TextBlock x:Name="PortLabel"
+                                   Grid.Column="1"
+                                   Text="—"
+                                   FontSize="12"
+                                Foreground="White"/>
+                    </Grid>
+
+                    <Grid Grid.Row="1">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Text="Stato"
+                                   FontSize="12"
+                                Foreground="#888888"/>
+                        <TextBlock x:Name="StatusLabel"
+                                   Grid.Column="1"
+                                   Text="Disconnesso"
+                                   FontSize="12"
+                                Foreground="#CC3333"/>
+                    </Grid>
+
+                    <Grid Grid.Row="2">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Text="Ultima connessione"
+                                   FontSize="12"
+                                Foreground="#888888"/>
+                        <TextBlock x:Name="LastConnectedLabel"
+                                   Grid.Column="1"
+                                   Text="—"
+                                   FontSize="12"
+                                Foreground="White"/>
+                    </Grid>
+
+                </Grid>
+            </Border>
+        </StackPanel>
+
+        <!-- Version -->
+        <TextBlock Grid.Row="3"
+                   Text="AxiApp v0.1 — github.com/yourrepo"
+                   FontSize="11"
+                Foreground="#333333"
+                   VerticalAlignment="Bottom"/>
+    </Grid>
+</Page>

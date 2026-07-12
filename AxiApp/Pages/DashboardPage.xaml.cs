@@ -16,20 +16,17 @@ namespace AxiApp.Pages
             InitializeComponent();
         }
 
-        // MainWindow passes itself as the navigation parameter
         protected override void OnNavigatedTo(NavigationEventArgs e)
         {
             base.OnNavigatedTo(e);
-
             if (e.Parameter is MainWindow main)
             {
                 _main = main;
-
-                // Subscribe to connection changes to update the dot
                 _main.Serial.ConnectionChanged += OnConnectionChanged;
 
-                // Reflect current state immediately
-                UpdateDot(_main.Serial.IsConnected);
+                // Check current state right now, don't wait for next event
+                UpdateAxiDeckDot(_main.Serial.IsConnected);
+                UpdatePorcelliDashDot(false);
             }
         }
 
@@ -40,17 +37,25 @@ namespace AxiApp.Pages
                 _main.Serial.ConnectionChanged -= OnConnectionChanged;
         }
 
-        // ─────────────────────────────────────────────
-        //  CONNECTION DOT
-        // ─────────────────────────────────────────────
         private void OnConnectionChanged(bool connected)
         {
-            DispatcherQueue.TryEnqueue(() => UpdateDot(connected));
+            DispatcherQueue.TryEnqueue(() => UpdateAxiDeckDot(connected));
         }
 
-        // ─────────────────────────────────────────────
-        //  CARD CLICK
-        // ─────────────────────────────────────────────
+        private void UpdateAxiDeckDot(bool connected)
+        {
+            AxiDeckDot.Fill = connected
+                ? new SolidColorBrush(Colors.LimeGreen)
+                : new SolidColorBrush(ColorHelper.FromArgb(255, 200, 50, 50));
+        }
+
+        private void UpdatePorcelliDashDot(bool connected)
+        {
+            PorcelliDashDot.Fill = connected
+                ? new SolidColorBrush(Colors.LimeGreen)
+                : new SolidColorBrush(ColorHelper.FromArgb(255, 200, 50, 50));
+        }
+
         private void AxiDeckCard_Click(object sender, RoutedEventArgs e)
         {
             _main?.OpenDetailPanel(typeof(AxiDeckPage));
@@ -59,16 +64,6 @@ namespace AxiApp.Pages
         private void PorcelliDashCard_Click(object sender, RoutedEventArgs e)
         {
             _main?.OpenDetailPanel(typeof(PorcelliDashPage));
-        }
-
-        private void UpdateDot(bool connected)
-        {
-            var brush = connected
-                ? new SolidColorBrush(Colors.LimeGreen)
-                : new SolidColorBrush(Microsoft.UI.ColorHelper.FromArgb(255, 200, 50, 50));
-
-            AxiDeckDot.Fill = brush;
-            PorcelliDashDot.Fill = brush;
         }
     }
 }

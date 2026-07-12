@@ -1,160 +1,398 @@
 using System;
 using System.IO.Ports;
+using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using Windows.ApplicationModel.AppExtensions;
-using Windows.Media.Playback;
 
 namespace AxiApp
 {
     public class SerialManager
     {
-        // Config
+        // ─────────────────────────────────────────────
+        //  CONFIG
+        // ─────────────────────────────────────────────
         private const int BaudRate = 9600;
         private const string HandshakeMsg = "CONNECT";
         private const string TimePrefix = "TIME:";
         private const int TimeInterval = 30;
-        private const int ReconnectDelay = 5000; // ms
+        private const int ReconnectDelay = 5000;
+        private const int PingInterval = 5000;
+        private const int PongTimeout = 12000;
 
-        // Events
+        // ─────────────────────────────────────────────
+        //  EVENTS
+        // ─────────────────────────────────────────────
         public event Action<bool>? ConnectionChanged;
         public event Action<string>? StatusChanged;
-        public event Action<string>? MessageReceived;
+        public event Action<int, bool>? ButtonEvent;
+        public event Action<int, int>? KnobEvent;
 
-        // State
+        // ─────────────────────────────────────────────
+        //  STATE
+        // ─────────────────────────────────────────────
         private SerialPort? _port;
         private CancellationTokenSource _cts = new();
         private readonly object _lock = new();
-        public bool IsConnected {get; private set; }
+        private DateTime _lastPong = DateTime.MinValue;
+        private DateTime _lastPing = DateTime.MinValue;
+        private readonly StringBuilder _readBuffer = new();
+        private string? _lastKnownPort = null;
+        private DateTime _lastTimeSend = DateTime.MinValue;
 
-        // Starts the background connection loop
+        public bool IsConnected { get; private set; }
+        public string? LastKnownPort => _lastKnownPort;
+        public DateTime? LastConnectedAt { get; private set; }
+
+        // ─────────────────────────────────────────────
+        //  PUBLIC API
+        // ─────────────────────────────────────────────
         public void Start()
         {
             _cts = new CancellationTokenSource();
             Task.Run(() => ConnectionLoop(_cts.Token));
+            Console.WriteLine("[Serial] Manager started.");
         }
 
-        // Stops and closes the port
         public void Stop()
         {
             _cts.Cancel();
             ClosePort();
+            Console.WriteLine("[Serial] Manager stopped.");
         }
 
-        // Closes the port so the loop reconnects automatically
         public void Reset()
         {
+            Console.WriteLine("[Serial] Reset requested.");
             ClosePort();
         }
 
-        // Connection loop
+        public void SendTime()
+        {
+            string msg = $"{TimePrefix}{DateTime.Now:HH:mm}";
+            Console.WriteLine($"[Serial] -> {msg}");
+            Send(msg);
+        }
+
+        public void SendLabel(int index, string label)
+        {
+            if (index < 0 || index > 5) return;
+            string msg = $"LABEL:{index + 1}:{label}";
+            Console.WriteLine($"[Serial] -> {msg}");
+            Send(msg);
+        }
+
+        public void SendAllLabels(string[] labels)
+        {
+            if (labels.Length != 6) return;
+            string msg = $"LABELS:{string.Join("|", labels)}";
+            Console.WriteLine($"[Serial] -> {msg}");
+            Send(msg);
+        }
+
+        public void SendTrack(string title, string artist, string duration, int progress)
+        {
+            string msg = $"TRACK:{title}|{artist}|{duration}|{progress}";
+            Console.WriteLine($"[Serial] -> {msg}");
+            Send(msg);
+        }
+
+        public void SendNoTrack()
+        {
+            Console.WriteLine("[Serial] -> NOTRACK");
+            Send("NOTRACK");
+        }
+
+        // ─────────────────────────────────────────────
+        //  CONNECTION LOOP
+        // ─────────────────────────────────────────────
         private async Task ConnectionLoop(CancellationToken ct)
         {
-            while(!ct.IsCancellationRequested)
+            while (!ct.IsCancellationRequested)
             {
-                string? portName = FindArduinoPort();
-                if(portName == null)
+                RaiseStatus("Searching for device...");
+
+                // FindArduinoPort returns an already-open, already-handshaked port
+                SerialPort? serial = await FindArduinoPort(ct);
+
+                if (serial == null)
                 {
-                    RaiseStatus("[INFO] Searching for device...");
-                    await Task.Delay(ReconnectDelay, ct).ContinueWith(_ => { });
+                    RaiseStatus("No device found — retrying...");
+                    await Delay(ReconnectDelay, ct);
                     continue;
                 }
 
-                RaiseStatus($"[INFO] Connecting on {portName}...");
+                string portName = serial.PortName;
+                Console.WriteLine($"[Serial] Using already-open port {portName}.");
+                RaiseStatus($"Connected on {portName}");
 
                 try
                 {
-                    var serial = new SerialPort(portName, BaudRate) { ReadTimeout = 2000 };
-                    serial.Open();
-
-                    await Task.Delay(2000, ct).ContinueWith(_ => { });
-
-                    serial.WriteLine(HandshakeMsg);
-
                     lock (_lock)
                     {
                         _port = serial;
                         IsConnected = true;
+                        _lastPong = DateTime.Now;
+                        _lastPing = DateTime.Now;
+                        _readBuffer.Clear();
                     }
 
                     ConnectionChanged?.Invoke(true);
-                    RaiseStatus($"[INFO] Connected successfully on {portName}");
-
                     SendTime();
-                    var lastTimeSend = DateTime.Now;
 
-                    while(!ct.IsCancellationRequested)
+                    // ── Main loop ──
+                    while (!ct.IsCancellationRequested)
                     {
-                        if((DateTime.Now - lastTimeSend).TotalSeconds >= TimeInterval)
+                        // Time sync — every 30 seconds
+                        if ((DateTime.Now - _lastTimeSend).TotalSeconds >= TimeInterval)
                         {
                             SendTime();
-                            lastTimeSend = DateTime.Now;
+                            _lastTimeSend = DateTime.Now;
                         }
 
+                        // Ping
+                        if ((DateTime.Now - _lastPing).TotalMilliseconds >= PingInterval)
+                        {
+                            Send("PING");
+                            _lastPing = DateTime.Now;
+                            Console.WriteLine("[Serial] -> PING");
+                        }
+
+                        // Pong timeout
+                        if ((DateTime.Now - _lastPong).TotalMilliseconds >= PongTimeout)
+                        {
+                            Console.WriteLine("[Serial] Pong timeout — disconnecting.");
+                            RaiseStatus("Device not responding...");
+                            break;
+                        }
+
+                        // Check port alive
+                        bool alive;
+                        lock (_lock) { alive = _port is { IsOpen: true }; }
+                        if (!alive) break;
+
+                        // Read incoming
+                        string? incoming = null;
                         lock (_lock)
                         {
-                            if (_port is { IsOpen: true } && _port.BytesToRead > 0)
+                            try { incoming = TryReadLine(_port!); }
+                            catch (TimeoutException) { }
+                            catch (Exception ex)
                             {
-                                try
-                                {
-                                    string line = _port.ReadLine().Trim();
-                                    if (!string.IsNullOrEmpty(line)) MessageReceived?.Invoke(line);
-                                }
-                                catch (TimeoutException) {}
+                                Console.WriteLine($"[Serial] Read error: {ex.Message}");
+                                break;
                             }
                         }
 
-                        bool alive;
-                        lock (_lock) {alive = _port is { IsOpen: true }; }
-                        if (!alive) break;
+                        if (incoming != null)
+                        {
+                            Console.WriteLine($"[Serial] <- {incoming}");
+                            HandleIncoming(incoming);
+                        }
 
-                        await Task.Delay(50, ct).ContinueWith(_ => {});
+                        await Delay(50, ct);
                     }
                 }
-
-                catch (Exception ex) when (ex is UnauthorizedAccessException or InvalidOperationException or System.IO.IOException)
+                catch (Exception ex) when (
+                    ex is UnauthorizedAccessException or
+                    InvalidOperationException or
+                    System.IO.IOException)
                 {
-                    RaiseStatus($"[ERROR] {ex.Message}");
+                    Console.WriteLine($"[Serial] Error: {ex.Message}");
+                    RaiseStatus($"Serial error: {ex.Message}");
                 }
                 finally
                 {
                     ClosePort();
                     ConnectionChanged?.Invoke(false);
-                    RaiseStatus("[INFO] Disconnected - retrying");
+                    RaiseStatus("Disconnected — retrying...");
                 }
 
-                await Task.Delay(ReconnectDelay, ct).ContinueWith(_ => { });
+                await Delay(ReconnectDelay, ct);
             }
         }
 
-        // Helpers (tf is this)
-        private static string? FindArduinoPort()
+        // ─────────────────────────────────────────────
+        //  PORT FINDER
+        //  Opens each port, handshakes, returns the
+        //  live open port on success — no double open
+        // ─────────────────────────────────────────────
+        private async Task<SerialPort?> FindArduinoPort(CancellationToken ct)
         {
-            foreach (string name in SerialPort.GetPortNames())
+            string[] ports = SerialPort.GetPortNames();
+
+            if (ports.Length == 0)
             {
-                return name;
+                Console.WriteLine("[Serial] No COM ports found.");
+                return null;
+            }
+
+            Console.WriteLine($"[Serial] Available ports: {string.Join(", ", ports)}");
+
+            // Try last known port first — skip probe delay if it responds
+            if (_lastKnownPort != null && Array.Exists(ports, p => p == _lastKnownPort))
+            {
+                Console.WriteLine($"[Serial] Trying last known port {_lastKnownPort} first...");
+                var result = await ProbePort(_lastKnownPort, ct);
+                if (result != null) return result;
+                Console.WriteLine($"[Serial] Last known port failed — scanning all.");
+            }
+
+            // Fall back to scanning all ports
+            foreach (string portName in ports)
+            {
+                if (ct.IsCancellationRequested) return null;
+                if (portName == _lastKnownPort) continue; // already tried
+
+                var result = await ProbePort(portName, ct);
+                if (result != null) return result;
+            }
+
+            return null;
+        }
+
+        // Extract probe logic into its own method
+        private async Task<SerialPort?> ProbePort(string portName, CancellationToken ct)
+        {
+            Console.WriteLine($"[Serial] Probing {portName}...");
+            SerialPort? probe = null;
+            try
+            {
+                probe = new SerialPort(portName, BaudRate)
+                {
+                    ReadTimeout = 500,
+                    WriteTimeout = 1000,
+                    NewLine = "\n"
+                };
+                probe.Open();
+                await Delay(2500, ct);
+                probe.DiscardInBuffer();
+                _readBuffer.Clear();
+
+                probe.WriteLine(HandshakeMsg);
+                Console.WriteLine($"[Serial] {portName} -> CONNECT");
+
+                var deadline = DateTime.Now.AddSeconds(4);
+                while (DateTime.Now < deadline && !ct.IsCancellationRequested)
+                {
+                    string? line = TryReadLine(probe);
+                    if (line != null)
+                    {
+                        Console.WriteLine($"[Serial] {portName} <- {line}");
+                        if (line == "ACK")
+                        {
+                            _lastKnownPort = portName;
+                            LastConnectedAt = DateTime.Now;
+                            Console.WriteLine($"[Serial] Arduino found on {portName}!");
+                            return probe;
+                        }
+                    }
+                    await Delay(50, ct);
+                }
+
+                Console.WriteLine($"[Serial] {portName} — no ACK.");
+                probe.Close();
+                probe.Dispose();
+                return null;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[Serial] {portName} — failed ({ex.Message})");
+                try { probe?.Close(); probe?.Dispose(); } catch { }
+                return null;
+            }
+            finally
+            {
+                _readBuffer.Clear();
+            }
+        }
+
+        // ─────────────────────────────────────────────
+        //  LINE READER — byte-by-byte accumulator
+        // ─────────────────────────────────────────────
+        private string? TryReadLine(SerialPort port)
+        {
+            while (port.BytesToRead > 0)
+            {
+                int b = port.ReadByte();
+                if (b == -1) break;
+
+                char c = (char)b;
+                if (c == '\n')
+                {
+                    string line = _readBuffer.ToString().TrimEnd('\r').Trim();
+                    _readBuffer.Clear();
+                    if (line.Length > 0) return line;
+                }
+                else
+                {
+                    _readBuffer.Append(c);
+                }
             }
             return null;
         }
 
-        private void SendTime()
+        // ─────────────────────────────────────────────
+        //  INCOMING PARSER
+        // ─────────────────────────────────────────────
+        private void HandleIncoming(string line)
         {
-            string msg = $"{TimePrefix}{DateTime.Now:HH:mm}";
-            Send(msg);
+            if (line == "PONG" || line == "ACK")
+            {
+                lock (_lock) { _lastPong = DateTime.Now; }
+                return;
+            }
+
+            if (line == "PING")
+            {
+                Send("PONG");
+                lock (_lock) { _lastPong = DateTime.Now; }
+                return;
+            }
+
+            if (line.StartsWith("BTN:"))
+            {
+                var parts = line.Split(':');
+                if (parts.Length == 3 &&
+                    int.TryParse(parts[1], out int n) && n >= 1 && n <= 6)
+                {
+                    bool pressed = parts[2] == "DOWN";
+                    Console.WriteLine($"[Serial] Button {n} {(pressed ? "DOWN" : "UP")}");
+                    ButtonEvent?.Invoke(n - 1, pressed);
+                }
+                return;
+            }
+
+            if (line.StartsWith("KNOB"))
+            {
+                if (line.Length >= 6 &&
+                    int.TryParse(line[4].ToString(), out int knob))
+                {
+                    int dir = line[5] == '+' ? 1 : -1;
+                    Console.WriteLine($"[Serial] Knob {knob} {(dir > 0 ? "CW" : "CCW")}");
+                    KnobEvent?.Invoke(knob - 1, dir);
+                }
+                return;
+            }
+
+            Console.WriteLine($"[Serial] Unhandled message: {line}");
         }
 
+        // ─────────────────────────────────────────────
+        //  HELPERS
+        // ─────────────────────────────────────────────
         private void Send(string msg)
         {
             lock (_lock)
             {
                 try
                 {
-                    if(_port is { IsOpen : true })
-                    {
+                    if (_port is { IsOpen: true })
                         _port.WriteLine(msg);
-                    }
                 }
-                catch(Exception ex) { RaiseStatus($"[ERROR] Error whilst sending message: {ex.Message}"); }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"[Serial] Send failed: {ex.Message}");
+                }
             }
         }
 
@@ -162,13 +400,20 @@ namespace AxiApp
         {
             lock (_lock)
             {
-                try { _port?.Close(); }
-                catch(Exception ex) { RaiseStatus($"[ERROR] Error whilst closing port. {ex.Message}"); }
+                try { _port?.Close(); _port?.Dispose(); }
+                catch { }
                 _port = null;
                 IsConnected = false;
+                _readBuffer.Clear();
             }
+            Console.WriteLine("[Serial] Port closed.");
         }
 
         private void RaiseStatus(string text) => StatusChanged?.Invoke(text);
+
+        private static async Task Delay(int ms, CancellationToken ct)
+        {
+            await Task.Delay(ms, ct).ContinueWith(_ => { });
+        }
     }
 }

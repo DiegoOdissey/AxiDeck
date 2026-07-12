@@ -1,5 +1,6 @@
+using Microsoft.UI;
 using Microsoft.UI.Xaml;
-using Microsoft.UI.Xaml.Media.Animation;
+using Microsoft.UI.Xaml.Media;
 using System;
 using AxiApp.Pages;
 
@@ -7,15 +8,18 @@ namespace AxiApp
 {
     public sealed partial class MainWindow : Window
     {
-        // ─────────────────────────────────────────────
-        //  DEBUG
-        // ─────────────────────────────────────────────
-        private const bool DebugSimulateConnected = true;
+        public const bool DebugSimulateConnected = false;
 
         // ─────────────────────────────────────────────
-        //  STATE
+        //  SERVICES
         // ─────────────────────────────────────────────
         public readonly SerialManager Serial = new();
+        public readonly TrackDetector Tracker = new();
+        public readonly BindingManager Bindings = new();
+        public readonly TrayManager Tray = new();
+
+        public bool NotificationsEnabled { get; set; } = true;
+
         private bool _detailOpen = false;
 
         // ─────────────────────────────────────────────
@@ -24,20 +28,93 @@ namespace AxiApp
         public MainWindow()
         {
             InitializeComponent();
-
-            // Window size — compact on start
-            SetWindowSize(1600, 800);
-
-            // Force dark theme on the root
+            SetWindowSize(1400, 800);
             RootGrid.RequestedTheme = ElementTheme.Dark;
+
+            Console.WriteLine("[App] AxiApp starting...");
+
+            // Load saved bindings
+            Bindings.Load();
+
+            // Init tray
+            Tray.Initialize(this);
 
             // Navigate to dashboard
             MainFrame.Navigate(typeof(DashboardPage), this,
-                new SuppressNavigationTransitionInfo());
+                new Microsoft.UI.Xaml.Media.Animation
+                    .SuppressNavigationTransitionInfo());
 
-            // Start serial
+            // Wire events
+            Serial.ConnectionChanged += OnConnectionChanged;
+            Serial.StatusChanged += OnStatusChanged;
+            Serial.ButtonEvent += OnButtonEvent;
+            Serial.KnobEvent += OnKnobEvent;
+
+            Tracker.TrackPlaying += OnTrackPlaying;
+            Tracker.TrackStopped += OnTrackStopped;
+
             if (!DebugSimulateConnected)
                 Serial.Start();
+
+            Tracker.Start();
+            Console.WriteLine("[App] Init complete.");
+        }
+
+        // ─────────────────────────────────────────────
+        //  SERIAL EVENTS
+        // ─────────────────────────────────────────────
+        private void OnConnectionChanged(bool connected)
+        {
+            Console.WriteLine(
+                $"[App] Connection: {(connected ? "CONNECTED" : "DISCONNECTED")}");
+
+            if (NotificationsEnabled)
+                Tray.Notify("AxiApp",
+                    connected ? "AxiDeck connesso." : "AxiDeck disconnesso.");
+
+            Tray.UpdateTooltip(connected ? "AxiApp — AxiDeck connesso" : "AxiApp");
+
+            // Send labels to deck on connect
+            if (connected)
+            {
+                Serial.SendAllLabels(Bindings.GetButtonLabels());
+                Serial.SendTime();
+            }
+        }
+
+        private void OnStatusChanged(string text)
+        {
+            Console.WriteLine($"[App] Status: {text}");
+        }
+
+        private void OnButtonEvent(int index, bool pressed)
+        {
+            Console.WriteLine($"[App] Button {index + 1} {(pressed ? "DOWN" : "UP")}");
+            if (pressed)
+                Bindings.ExecuteButton(index);
+        }
+
+        private void OnKnobEvent(int knob, int direction)
+        {
+            Console.WriteLine($"[App] Knob {knob + 1} {(direction > 0 ? "CW" : "CCW")}");
+            Bindings.ExecuteKnob(knob, direction);
+        }
+
+        // ─────────────────────────────────────────────
+        //  TRACK EVENTS
+        // ─────────────────────────────────────────────
+        private void OnTrackPlaying(string title, string artist,
+                                    string duration, int progress)
+        {
+            Console.WriteLine(
+                $"[App] Track: {title} — {artist} [{duration}] {progress}%");
+            Serial.SendTrack(title, artist, duration, progress);
+        }
+
+        private void OnTrackStopped()
+        {
+            Console.WriteLine("[App] Track stopped.");
+            Serial.SendNoTrack();
         }
 
         // ─────────────────────────────────────────────
@@ -50,12 +127,14 @@ namespace AxiApp
                 _detailOpen = true;
                 DetailCol.Width = new GridLength(480);
                 DetailDivider.Visibility = Visibility.Visible;
+                SetWindowSize(1600, 800);
             }
 
             DetailFrame.Navigate(pageType, this,
-                new SlideNavigationTransitionInfo
+                new Microsoft.UI.Xaml.Media.Animation.SlideNavigationTransitionInfo
                 {
-                    Effect = SlideNavigationTransitionEffect.FromRight
+                    Effect = Microsoft.UI.Xaml.Media.Animation
+                             .SlideNavigationTransitionEffect.FromRight
                 });
         }
 
@@ -65,6 +144,7 @@ namespace AxiApp
             DetailCol.Width = new GridLength(0);
             DetailDivider.Visibility = Visibility.Collapsed;
             DetailFrame.Content = null;
+            SetWindowSize(1400, 800);
         }
 
         // ─────────────────────────────────────────────
@@ -75,33 +155,34 @@ namespace AxiApp
             SetNavActive(NavDevices, NavSettings);
             CloseDetailPanel();
             MainFrame.Navigate(typeof(DashboardPage), this,
-                new SuppressNavigationTransitionInfo());
+                new Microsoft.UI.Xaml.Media.Animation
+                    .SuppressNavigationTransitionInfo());
         }
 
         private void NavSettings_Click(object sender, RoutedEventArgs e)
         {
             SetNavActive(NavSettings, NavDevices);
             CloseDetailPanel();
-            // Future: MainFrame.Navigate(typeof(SettingsPage), this, ...);
+            MainFrame.Navigate(typeof(SettingsPage), this,
+                new Microsoft.UI.Xaml.Media.Animation
+                    .SuppressNavigationTransitionInfo());
         }
 
         private void CheckUpdates_Click(object sender, RoutedEventArgs e)
         {
-            // Future: check GitHub releases API
+            Console.WriteLine("[Nav] Check for updates.");
         }
 
         private static void SetNavActive(
             Microsoft.UI.Xaml.Controls.Button active,
             Microsoft.UI.Xaml.Controls.Button inactive)
         {
-            active.Background = new Microsoft.UI.Xaml.Media.SolidColorBrush(
-                                      Microsoft.UI.ColorHelper.FromArgb(255, 34, 34, 34));
-            active.Foreground = new Microsoft.UI.Xaml.Media.SolidColorBrush(
-                                      Microsoft.UI.Colors.White);
-            inactive.Background = new Microsoft.UI.Xaml.Media.SolidColorBrush(
-                                      Microsoft.UI.Colors.Transparent);
-            inactive.Foreground = new Microsoft.UI.Xaml.Media.SolidColorBrush(
-                                      Microsoft.UI.ColorHelper.FromArgb(255, 136, 136, 136));
+            active.Background = new SolidColorBrush(
+                                      ColorHelper.FromArgb(255, 34, 34, 34));
+            active.Foreground = new SolidColorBrush(Colors.White);
+            inactive.Background = new SolidColorBrush(Colors.Transparent);
+            inactive.Foreground = new SolidColorBrush(
+                                      ColorHelper.FromArgb(255, 136, 136, 136));
         }
 
         // ─────────────────────────────────────────────
