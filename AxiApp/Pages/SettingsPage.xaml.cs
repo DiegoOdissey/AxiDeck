@@ -11,6 +11,7 @@ namespace AxiApp.Pages
     {
         private MainWindow? _main;
         private bool _loading = true; // suppress toggle events during init
+        private const string DevModeKey = "developerMode";
 
         public SettingsPage() => InitializeComponent();
 
@@ -35,6 +36,8 @@ namespace AxiApp.Pages
                              _main.Serial.LastConnectedAt);
 
             _loading = false;
+
+            DevModeToggle.IsOn = ConsoleManager.IsOpen;
         }
 
         protected override void OnNavigatedFrom(NavigationEventArgs e)
@@ -128,5 +131,64 @@ namespace AxiApp.Pages
                 Console.WriteLine("[Settings] Startup removed.");
             }
         }
+
+        private void DevModeToggle_Toggled(object sender,
+    Microsoft.UI.Xaml.RoutedEventArgs e)
+        {
+            if (_loading) return;
+
+            if (DevModeToggle.IsOn)
+                ConsoleManager.Show();
+            else
+                ConsoleManager.Hide();
+
+            // Persist the preference
+            SaveDevModePreference(DevModeToggle.IsOn);
+            Console.WriteLine($"[Settings] Developer mode: {DevModeToggle.IsOn}");
+        }
+
+        // Persistence helpers
+        private static void SaveDevModePreference(bool enabled)
+        {
+            try
+            {
+                string path = GetPrefsPath();
+                var prefs = LoadPrefs();
+                prefs[DevModeKey] = enabled.ToString();
+                System.IO.File.WriteAllText(path,
+                    System.Text.Json.JsonSerializer.Serialize(prefs,
+                        new System.Text.Json.JsonSerializerOptions { WriteIndented = true }));
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[Settings] Failed to save prefs: {ex.Message}");
+            }
+        }
+
+        private static bool LoadDevModePreference()
+        {
+            try
+            {
+                var prefs = LoadPrefs();
+                return prefs.TryGetValue(DevModeKey, out string? val) && val == "True";
+            }
+            catch { return false; }
+        }
+
+        private static Dictionary<string, string> LoadPrefs()
+        {
+            string path = GetPrefsPath();
+            if (!System.IO.File.Exists(path))
+                return new Dictionary<string, string>();
+            string json = System.IO.File.ReadAllText(path);
+            return System.Text.Json.JsonSerializer
+                       .Deserialize<Dictionary<string, string>>(json)
+                   ?? new Dictionary<string, string>();
+        }
+
+        private static string GetPrefsPath() =>
+            System.IO.Path.Combine(
+                Windows.Storage.ApplicationData.Current.LocalFolder.Path,
+                "prefs.json");
     }
 }

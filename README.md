@@ -3,12 +3,18 @@
 A custom hardware control deck built around an Arduino Nano — physical knobs and buttons that talk to your PC over serial.
 
 ```
-┌─────────────────────────────────────┐
-│  [knob 1]   [knob 2]   [knob 3]     │
-│                                     │
-│  [ btn ]   [ btn ]   [ btn ]        │
-└─────────────────────────────────────┘
-        ↕  USB / Serial
+┌──────────────────────────────────┐
+│  [ btn ]   [ btn ]   [ btn ]     │
+│                                  │
+│  [ btn ]   [ btn ]   [ btn ]     |
+|                                  |
+|      [ OLED ]      [ OLED ]      |
+|                                  |
+|  [ knob 1]          [ knob 2]    |
+└──────────────────────────────────┘
+
+        ↕  Data transmission with USB / Serial
+
    AxiApp (Windows tray/GUI)
 ```
 
@@ -32,8 +38,14 @@ Written for the **Arduino Nano**. Handles:
 - Serial handshake (`CONNECT`)
 - Time sync (`TIME:HH:MM`)
 - Knob and button event reporting back to the host
+- OLED screen managing with TCA multiplexer
 
-Flash with the Arduino IDE or CLI. No external libraries required.
+Flash with the Arduino IDE or CLI.
+
+## External libraries required:
+- Wire
+- Adafuit_GFX
+- Adafruit_SSD1306
 
 ---
 
@@ -75,7 +87,7 @@ Superseded by the C# version. Not actively maintained.
 
 ---
 
-## Serial Protocol
+## Serial Protocol (examples)
 
 | Direction     | Message         | Description                        |
 |---------------|-----------------|------------------------------------|

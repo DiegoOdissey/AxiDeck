@@ -94,6 +94,37 @@
                         OnContent=""
                               VerticalAlignment="Center"/>
             </Grid>
+
+            <!-- Developer -->
+            <StackPanel Grid.Row="2"
+                        Spacing="12">
+                <TextBlock Text="SVILUPPATORE"
+                           FontSize="11"
+                           Foreground="#555555"
+                           CharacterSpacing="150"/>
+
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+                    <StackPanel Grid.Column="0"
+                                Spacing="2">
+                        <TextBlock Text="Modalità sviluppatore"
+                                   FontSize="13"
+                                   Foreground="White"/>
+                        <TextBlock Text="Mostra una console con i log in tempo reale"
+                                   FontSize="11"
+                                   Foreground="#666666"/>
+                    </StackPanel>
+                    <ToggleSwitch x:Name="DevModeToggle"
+                                  Grid.Column="1"
+                                  Toggled="DevModeToggle_Toggled"
+                                  OffContent=""
+                                  OnContent=""
+                                  VerticalAlignment="Center"/>
+                </Grid>
+            </StackPanel>
         </StackPanel>
 
         <!-- Device info -->

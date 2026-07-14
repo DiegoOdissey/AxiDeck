@@ -1,5 +1,5 @@
-﻿using Windows.ApplicationModel;
-using Windows.ApplicationModel.Activation;
+﻿using System.Collections.Generic;
+using Windows.ApplicationModel;
 using Windows.Foundation;
 using Windows.Foundation.Collections;
 using Microsoft.UI.Xaml;
@@ -22,7 +22,7 @@ namespace AxiApp;
 public partial class App : Application
 {
     private Window? _window;
-    
+
     /// <summary>
     /// Initializes the singleton application object.  This is the first line of authored code
     /// executed, and as such is the logical equivalent of main() or WinMain().
@@ -38,6 +38,29 @@ public partial class App : Application
     /// <param name="args">Details about the launch request and process.</param>
     protected override void OnLaunched(Microsoft.UI.Xaml.LaunchActivatedEventArgs args)
     {
+        // Restore developer mode if it was enabled
+        try
+        {
+            string prefsPath = System.IO.Path.Combine(
+                Windows.Storage.ApplicationData.Current.LocalFolder.Path,
+                "prefs.json");
+
+            if (System.IO.File.Exists(prefsPath))
+            {
+                string json = System.IO.File.ReadAllText(prefsPath);
+                var prefs = System.Text.Json.JsonSerializer
+                                   .Deserialize<Dictionary<string, string>>(json);
+                if (prefs != null &&
+                    prefs.TryGetValue("developerMode", out string? val) &&
+                    val == "True")
+                {
+                    ConsoleManager.Show(); // Note: ensure ConsoleManager is defined in your project
+                }
+            }
+        }
+        catch { }
+
+        // Fixed: changed m_window to _window to match the field declaration above
         _window = new MainWindow();
         _window.Activate();
     }

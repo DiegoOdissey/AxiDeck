@@ -146,7 +146,7 @@ void saveLabelsToEEPROM() {
 //  BOOT SCREEN
 // ─────────────────────────────────────────────
 void showBootScreen() {
-  Serial.println(F("Starting boot screen sequence"));
+  Serial.println("Starting boot screen sequence");
   tcaSelect(0);
   display.clearDisplay();
   display.drawBitmap(48, 0, trussi_T, 32, 32, SSD1306_WHITE);
@@ -161,7 +161,7 @@ void showBootScreen() {
   display.println("AxiDeck");
   display.display();
   delay(3500);
-  Serial.println(F("Ended boot screen sequence"));
+  Serial.println("Ended boot screen sequence");
 }
 
 // ─────────────────────────────────────────────
@@ -207,6 +207,7 @@ void showWaitingScreen() {
       display.display();
     }
   }
+  Serial.println("PC Connected!");
 }
 
 // ─────────────────────────────────────────────
@@ -308,15 +309,16 @@ void drawSongDashboard() {
 void drawMainDashboard() {
   tcaSelect(0);
   display.clearDisplay();
-  display.clearDisplay();
-    // string 1
-    display.setTextColor(1);
-    display.setTextSize(4);
-    display.setTextWrap(false);
-    display.setFont(&Org_01);
-    display.setCursor(12, 22);
-    display.print(currentTime);
-    display.display();
+  display.setTextWrap(false);
+  display.setTextColor(SSD1306_WHITE);
+  display.setFont(&FreeMonoBold9pt7b);
+  display.setCursor(14, 23);
+  display.print(currentTime);
+  display.drawLine(0, 26, 127, 26, SSD1306_WHITE);
+  display.setFont(&Picopixel);
+  display.setCursor(0, 31);
+  display.print(isConnected ? "PC connesso" : "Standalone");
+  display.display();
 }
 
 void drawButtonDashboard() {
@@ -372,10 +374,8 @@ void redrawScreens() {
 //  I2C BUS RECOVERY
 // ─────────────────────────────────────────────
 void recoverI2CBus() {
-  Serial.println(F("[i2c] Timeout detected — running recovery..."));
+  Serial.println("[i2c] Timeout detected — running recovery...");
   Wire.end();
-  
-  // Cleanly toggle SDA/SCL to release hung devices
   pinMode(SDA, OUTPUT);
   pinMode(SCL, OUTPUT);
   digitalWrite(SDA, HIGH);
@@ -388,21 +388,13 @@ void recoverI2CBus() {
   digitalWrite(SDA, HIGH); delayMicroseconds(5);
 
   Wire.begin();
-  Wire.setClock(50000);
-  Wire.setWireTimeout(1000, true);
+  Wire.setWireTimeout(3000, true);
   delay(50);
-
-  // Safely select BOTH channels and initialize together
-  tcaSelectMultiple(0b00000011); 
-  delay(50);
-  display.begin(SSD1306_SWITCHCAPVCC, OLED_ADDR);
-  
-  display.clearDisplay();
-  display.display();
-
+  tcaSelect(0); display.begin(SSD1306_SWITCHCAPVCC, OLED_ADDR);
+  tcaSelect(1); display.begin(SSD1306_SWITCHCAPVCC, OLED_ADDR);
   dashDirty   = true;
   labelsDirty = true;
-  Serial.println(F("[i2c] Recovery complete."));
+  Serial.println("[i2c] Recovery complete.");
 }
 
 // ─────────────────────────────────────────────
@@ -478,29 +470,17 @@ void parseSerial(String msg) {
 //  KNOBS (Updated for Active Low / Falling Edge detents)
 // ─────────────────────────────────────────────
 void handleKnobs() {
-  // ─── KNOB 1 ───
   int clk1 = digitalRead(clkPin1);
   if (clk1 != lastClkState1) {
-    int dt1 = digitalRead(dtPin1);
-    // If CLK and DT are different, we are turning one way. 
-    // If they are the same, we are turning the other way.
-    if (clk1 != dt1) {
-      Serial.println(F("KNOB1+"));
-    } else {
-      Serial.println(F("KNOB1-"));
-    }
+    if (clk1 == LOW)   // falling edge = detent
+      Serial.println(digitalRead(dtPin1) == HIGH ? "KNOB1+" : "KNOB1-");
   }
   lastClkState1 = clk1;
 
-  // ─── KNOB 2 ───
   int clk2 = digitalRead(clkPin2);
   if (clk2 != lastClkState2) {
-    int dt2 = digitalRead(dtPin2);
-    if (clk2 != dt2) {
-      Serial.println(F("KNOB2+"));
-    } else {
-      Serial.println(F("KNOB2-"));
-    }
+    if (clk2 == LOW)   // falling edge = detent
+      Serial.println(digitalRead(dtPin2) == HIGH ? "KNOB2+" : "KNOB2-");
   }
   lastClkState2 = clk2;
 }
@@ -541,12 +521,11 @@ void handlePing() {
   unsigned long now = millis();
   if (isConnected && now - lastPingSent >= PING_INTERVAL) {
     lastPingSent = now;
-    Serial.print(F("PING | Free RAM: "));
-    Serial.print(freeMemory());
-    Serial.println(F(" bytes"));
+    Serial.println("PING");
   }
 
   if (isConnected && now - lastPongReceived >= PING_TIMEOUT) {
+    Serial.println("[sys] PC disconnected — returning to waiting screen.");
     isConnected = false;
     musicActive = false;
     showWaitingScreen();
@@ -555,36 +534,18 @@ void handlePing() {
   }
 }
 
-void tcaSelectMultiple(uint8_t mask) {
-  Wire.beginTransmission(0x70);
-  Wire.write(mask);
-  Wire.endTransmission();
-}
-
 // ─────────────────────────────────────────────
 //  SETUP
 // ─────────────────────────────────────────────
 void setup() {
   Wire.begin();
-  delay(200);
-  Wire.setClock(50000);
-  Wire.setWireTimeout(1000, true);
+  Wire.setClock(5000);
+  Wire.setWireTimeout(3000, true);
   Serial.begin(9600);
 
-  tcaSelectMultiple(0b00000011); 
-  delay(50);
+  tcaSelect(0); display.begin(SSD1306_SWITCHCAPVCC, OLED_ADDR);
+  tcaSelect(1); display.begin(SSD1306_SWITCHCAPVCC, OLED_ADDR);
 
-  // 2. Initialize ONCE. This configures both physical screens together.
-  if(!display.begin(SSD1306_SWITCHCAPVCC, OLED_ADDR)) {
-    Serial.println(F("OLED Init Failed!"));
-    while(1);
-  }
-  
-  // Clear the shared buffer and send the clear command to both screens
-  display.clearDisplay();
-  display.display();
-  delay(100);
- 
   // Encoder pins — Set to INPUT_PULLUP to use internal resistors to 5V
   pinMode(clkPin1, INPUT_PULLUP);
   pinMode(dtPin1,  INPUT_PULLUP);
@@ -629,24 +590,3 @@ void loop() {
     }
   }
 }
-
-#ifdef __arm__
-// For ARM-based Arduinos if you ever upgrade
-extern "C" char* sbrk(int incr);
-int freeMemory() {
-  char top;
-  return &top - reinterpret_cast<char*>(sbrk(0));
-}
-#else
-// For AVR-based boards (Nano, Uno, Pro Mini, Pro Micro)
-extern unsigned int __heap_start, *__brkval;
-int freeMemory() {
-  int free_memory;
-  if ((int)__brkval == 0) {
-    free_memory = ((int)&free_memory) - ((int)&__heap_start);
-  } else {
-    free_memory = ((int)&free_memory) - ((int)__brkval);
-  }
-  return free_memory;
-}
-#endif

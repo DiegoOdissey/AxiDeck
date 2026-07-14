@@ -43,12 +43,40 @@ namespace AxiApp
         public string? LastKnownPort => _lastKnownPort;
         public DateTime? LastConnectedAt { get; private set; }
 
+        // Add with other fields
+        private static string PortCachePath =>
+            Path.Combine(
+                Windows.Storage.ApplicationData.Current.LocalFolder.Path,
+                "lastport.txt");
+
+        private static void SaveLastPort(string portName)
+        {
+            try { File.WriteAllText(PortCachePath, portName); }
+            catch { }
+        }
+
+        private static string? LoadLastPort()
+        {
+            try
+            {
+                if (File.Exists(PortCachePath))
+                {
+                    string port = File.ReadAllText(PortCachePath).Trim();
+                    Console.WriteLine($"[Serial] Last known port from disk: {port}");
+                    return string.IsNullOrEmpty(port) ? null : port;
+                }
+            }
+            catch { }
+            return null;
+        }
+
         // ─────────────────────────────────────────────
         //  PUBLIC API
         // ─────────────────────────────────────────────
         public void Start()
         {
             _cts = new CancellationTokenSource();
+            _lastKnownPort = LoadLastPort();
             Task.Run(() => ConnectionLoop(_cts.Token));
             Console.WriteLine("[Serial] Manager started.");
         }
@@ -282,6 +310,7 @@ namespace AxiApp
                         {
                             _lastKnownPort = portName;
                             LastConnectedAt = DateTime.Now;
+                            SaveLastPort(portName);
                             Console.WriteLine($"[Serial] Arduino found on {portName}!");
                             return probe;
                         }

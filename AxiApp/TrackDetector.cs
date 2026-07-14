@@ -7,7 +7,7 @@ namespace AxiApp
 {
     public class TrackDetector
     {
-        private const int PollInterval = 2000;
+        private const int PollInterval = 1000;
 
         public event Action<string, string, string, int>? TrackPlaying;
         public event Action? TrackStopped;
@@ -109,22 +109,31 @@ namespace AxiApp
             string artist = props.Artist ?? "";
 
             var timeline = session.GetTimelineProperties();
+
             string duration = "0:00";
             int progress = 0;
 
             if (timeline != null)
             {
                 double totalSecs = timeline.EndTime.TotalSeconds;
-                double positionSecs = timeline.Position.TotalSeconds;
+                TimeSpan elapsedSinceUpdate = DateTimeOffset.UtcNow - timeline.LastUpdatedTime;
+
+                double positionSecs = timeline.Position.TotalSeconds + elapsedSinceUpdate.TotalSeconds;
 
                 if (totalSecs > 0)
                 {
-                    progress = (int)Math.Clamp((positionSecs / totalSecs) * 100, 0, 100);
+                    positionSecs = Math.Min(positionSecs, totalSecs);
+
+                    progress = (int)Math.Clamp(
+                        (positionSecs / totalSecs) * 100,
+                        0,
+                        100);
+
                     duration = FormatDuration(timeline.EndTime);
                 }
 
                 Console.WriteLine(
-                    $"[Track] Position: {FormatDuration(timeline.Position)}" +
+                    $"[Track] Position: {FormatDuration(TimeSpan.FromSeconds(positionSecs))}" +
                     $" / {duration} ({progress}%)");
             }
 
