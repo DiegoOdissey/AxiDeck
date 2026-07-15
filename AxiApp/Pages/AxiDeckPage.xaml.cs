@@ -7,6 +7,7 @@ using System;
 using System.Collections.Generic;
 using Windows.Storage.Pickers;
 using AxiApp;
+using Microsoft.UI.Xaml.Input;
 
 namespace AxiApp.Pages
 {
@@ -179,6 +180,7 @@ namespace AxiApp.Pages
                 ActionType.LaunchApp => "app",
                 ActionType.Shortcut => "shortcut",
                 ActionType.Volume => "volume",
+                ActionType.OpenWebsite => "website",
                 _ => "none"
             };
 
@@ -235,6 +237,11 @@ namespace AxiApp.Pages
                             { VolumeAppCombo.SelectedItem = item; break; }
                     }
                     break;
+
+                case ActionType.OpenWebsite:
+                    WebsitePanel.Visibility = Visibility.Visible;
+                    WebsiteUrlBox.Text = binding.WebsiteUrl;
+                    break;
             }
         }
 
@@ -244,6 +251,7 @@ namespace AxiApp.Pages
             AppPanel.Visibility = Visibility.Collapsed;
             ShortcutPanel.Visibility = Visibility.Collapsed;
             VolumePanel.Visibility = Visibility.Collapsed;
+            WebsitePanel.Visibility = Visibility.Collapsed;
         }
 
         private void ActionTypeCombo_SelectionChanged(object sender, SelectionChangedEventArgs e)
@@ -259,6 +267,7 @@ namespace AxiApp.Pages
                 case "app": AppPanel.Visibility = Visibility.Visible; break;
                 case "shortcut": ShortcutPanel.Visibility = Visibility.Visible; break;
                 case "volume": VolumePanel.Visibility = Visibility.Visible; break;
+                case "website": WebsitePanel.Visibility = Visibility.Visible; break;
             }
 
             Console.WriteLine($"[UI] Action type: {tag}");
@@ -382,6 +391,7 @@ namespace AxiApp.Pages
                     "app" => ActionType.LaunchApp,
                     "shortcut" => ActionType.Shortcut,
                     "volume" => ActionType.Volume,
+                    "website" => ActionType.OpenWebsite,
                     _ => ActionType.None
                 };
             }
@@ -397,6 +407,10 @@ namespace AxiApp.Pages
                     _ => MediaCommand.PlayPause
                 };
             }
+
+            // Website URL
+            if (binding.Action == ActionType.OpenWebsite)
+                binding.WebsiteUrl = WebsiteUrlBox.Text.Trim();
 
             // App path
             if (binding.Action == ActionType.LaunchApp)

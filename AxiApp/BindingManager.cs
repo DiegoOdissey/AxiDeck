@@ -16,7 +16,8 @@ namespace AxiApp
         Media,
         LaunchApp,
         Shortcut,
-        Volume
+        Volume,
+        OpenWebsite
     }
 
     public enum MediaCommand { PlayPause, Next, Previous }
@@ -29,6 +30,7 @@ namespace AxiApp
         public string AppPath { get; set; } = "";
         public string ShortcutKeys { get; set; } = "";
         public VolumeTarget VolumeTarget { get; set; } = VolumeTarget.Master;
+        public string WebsiteUrl { get; set; } = "";   // ← new
         public string Label { get; set; } = "";  // shown on deck screen
     }
 
@@ -150,6 +152,10 @@ namespace AxiApp
                 case ActionType.Volume:
                     ExecuteVolume(binding.VolumeTarget, direction);
                     break;
+                case ActionType.OpenWebsite:
+                    if (!string.IsNullOrWhiteSpace(binding.WebsiteUrl))
+                        ExecuteOpenWebsite(binding.WebsiteUrl);
+                break;
             }
         }
 
@@ -313,6 +319,29 @@ namespace AxiApp
                 Console.WriteLine(
                     $"[Bindings] App volume {(direction > 0 ? "up" : "down")} " +
                     $"for {target} — NAudio not yet wired.");
+            }
+        }
+
+        // ─────────────────────────────────────────────
+        //  OPEN WEBSITE
+        // ─────────────────────────────────────────────
+        private static void ExecuteOpenWebsite(string url)
+        {
+            try
+            {
+                // Ensure it has a scheme, otherwise Process.Start treats it as a file path
+                string target = url.Contains("://") ? url : $"https://{url}";
+
+                System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo
+                {
+                    FileName = target,
+                    UseShellExecute = true
+                });
+                Console.WriteLine($"[Bindings] Opened website: {target}");
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[Bindings] Open website error: {ex.Message}");
             }
         }
 

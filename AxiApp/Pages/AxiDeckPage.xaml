@@ -311,6 +311,8 @@
                                                         <ComboBoxItem Content="Controllo multimediale" Tag="media"/>
                                                         <ComboBoxItem Content="Apri applicazione" Tag="app"/>
                                                         <ComboBoxItem Content="Comando rapido"   Tag="shortcut"/>
+                                                        <ComboBoxItem Content="Apri sito web"
+                                                                        Tag="website"/>
                                                         <ComboBoxItem x:Name="VolumeOption"
                                                                       Content="Controllo volume" Tag="volume"/>
                                                 </ComboBox>
@@ -360,6 +362,18 @@
                                                                         FontSize="11"
                                                                         Click="SelectApp_Click"/>
                                                         </Grid>
+                                                </StackPanel>
+
+                                                <!-- Website sub-options -->
+                                                <StackPanel x:Name="WebsitePanel"
+                                                            Spacing="8"
+                                                            Visibility="Collapsed">
+                                                        <TextBlock Text="URL"
+                                                                   FontSize="11"
+                                                                   Foreground="#666666"/>
+                                                        <TextBox x:Name="WebsiteUrlBox"
+                                                                 PlaceholderText="es. youtube.com"
+                                                                 FontSize="12"/>
                                                 </StackPanel>
 
                                                 <!-- Shortcut sub-options -->
