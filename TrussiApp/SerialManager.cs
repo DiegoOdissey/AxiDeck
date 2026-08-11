@@ -120,7 +120,8 @@ namespace TrussiApp
         public void SendTrack(string title, string artist, string duration, int progress)
         {
             string msg = $"TRACK:{title}|{artist}|{duration}|{progress}";
-            Console.WriteLine($"[Serial] -> {msg}");
+            if (LogSettings.VerboseTrackLogging)
+                Console.WriteLine($"[Serial] -> {msg}");
             Send(msg);
         }
 

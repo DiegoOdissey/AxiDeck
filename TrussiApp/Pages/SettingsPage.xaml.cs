@@ -38,6 +38,7 @@ namespace TrussiApp.Pages
             _loading = false;
 
             DevModeToggle.IsOn = ConsoleManager.IsOpen;
+            TrackLogToggle.IsOn = LogSettings.VerboseTrackLogging;
         }
 
         protected override void OnNavigatedFrom(NavigationEventArgs e)
@@ -59,6 +60,31 @@ namespace TrussiApp.Pages
             if (_loading) return;
             SetStartupEnabled(StartupToggle.IsOn);
             Console.WriteLine($"[Settings] Startup with Windows: {StartupToggle.IsOn}");
+        }
+
+        private const string TrackLogKey = "verboseTrackLogging";
+
+        private void TrackLogToggle_Toggled(object sender,
+    Microsoft.UI.Xaml.RoutedEventArgs e)
+        {
+            if (_loading) return;
+
+            try
+            {
+                LogSettings.VerboseTrackLogging = TrackLogToggle.IsOn;
+
+                var prefs = LoadPrefs();
+                prefs[TrackLogKey] = TrackLogToggle.IsOn.ToString();
+                System.IO.File.WriteAllText(GetPrefsPath(),
+                    System.Text.Json.JsonSerializer.Serialize(prefs,
+                        new System.Text.Json.JsonSerializerOptions { WriteIndented = true }));
+
+                Console.WriteLine($"[Settings] Verbose track logging: {TrackLogToggle.IsOn}");
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[Settings] Track log toggle error: {ex}");
+            }
         }
 
         private void TrayToggle_Toggled(object sender,

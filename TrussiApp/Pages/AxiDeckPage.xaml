@@ -417,19 +417,11 @@
                                                                                 Tag="app"/>
                                                         </ComboBox>
 
-                                                        <!-- App volume target -->
+                                                        <!-- Populated dynamically from active audio sessions -->
                                                         <ComboBox x:Name="VolumeAppCombo"
                                                                   HorizontalAlignment="Stretch"
-                                                                  Visibility="Collapsed">
-                                                                <ComboBoxItem Content="Discord"
-                                                                                Tag="discord"/>
-                                                                <ComboBoxItem Content="Gaming"
-                                                                                Tag="gaming"/>
-                                                                <ComboBoxItem Content="Media"
-                                                                                Tag="media"/>
-                                                                <ComboBoxItem Content="Browser"
-                                                                                Tag="browser"/>
-                                                        </ComboBox>
+                                                                  PlaceholderText="Seleziona processo..."
+                                                                  Visibility="Collapsed"/>
                                                 </StackPanel>
 
                                         </Grid>

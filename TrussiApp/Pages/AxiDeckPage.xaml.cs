@@ -32,6 +32,7 @@ namespace TrussiApp.Pages
 
         // All buttons and knobs in the layout, keyed by Tag string
         private Dictionary<string, Button> _inputButtons = new();
+        private readonly AudioSessionManager _audioSessions = new();
 
         public AxiDeckPage()
         {
@@ -222,19 +223,28 @@ namespace TrussiApp.Pages
 
                 case ActionType.Volume:
                     VolumePanel.Visibility = Visibility.Visible;
-                    string volTag = binding.VolumeTarget == VolumeTarget.Master
-                                    ? "master" : "app";
+                    string volTag = binding.VolumeIsMaster ? "master" : "app";
                     foreach (ComboBoxItem item in VolumeTypeCombo.Items)
                         if (item.Tag?.ToString() == volTag)
                         { VolumeTypeCombo.SelectedItem = item; break; }
 
-                    if (binding.VolumeTarget != VolumeTarget.Master)
+                    if (!binding.VolumeIsMaster)
                     {
+                        var processes = _audioSessions.GetActiveProcessNames();
+                        VolumeAppCombo.Items.Clear();
+                        foreach (var name in processes)
+                            VolumeAppCombo.Items.Add(name);
+
                         VolumeAppCombo.Visibility = Visibility.Visible;
-                        string appTag = binding.VolumeTarget.ToString().ToLower();
-                        foreach (ComboBoxItem item in VolumeAppCombo.Items)
-                            if (item.Tag?.ToString() == appTag)
-                            { VolumeAppCombo.SelectedItem = item; break; }
+
+                        // Select the saved process if it's currently active, otherwise
+                        // add it temporarily so the user can still see what was saved
+                        if (!VolumeAppCombo.Items.Contains(binding.VolumeProcessName) &&
+                            !string.IsNullOrEmpty(binding.VolumeProcessName))
+                        {
+                            VolumeAppCombo.Items.Add(binding.VolumeProcessName);
+                        }
+                        VolumeAppCombo.SelectedItem = binding.VolumeProcessName;
                     }
                     break;
 
@@ -278,6 +288,17 @@ namespace TrussiApp.Pages
             if (VolumeTypeCombo.SelectedItem is not ComboBoxItem item) return;
             bool isApp = item.Tag?.ToString() == "app";
             VolumeAppCombo.Visibility = isApp ? Visibility.Visible : Visibility.Collapsed;
+
+            if (isApp)
+            {
+                // Refresh live — apps may have opened/closed since last time
+                var processes = _audioSessions.GetActiveProcessNames();
+                VolumeAppCombo.Items.Clear();
+                foreach (var name in processes)
+                    VolumeAppCombo.Items.Add(name);
+
+                Console.WriteLine($"[UI] Loaded {processes.Count} active audio sessions.");
+            }
         }
 
         // ─────────────────────────────────────────────
@@ -424,19 +445,11 @@ namespace TrussiApp.Pages
             if (binding.Action == ActionType.Volume &&
                 VolumeTypeCombo.SelectedItem is ComboBoxItem volItem)
             {
-                binding.VolumeTarget = volItem.Tag?.ToString() switch
-                {
-                    "app" when VolumeAppCombo.SelectedItem is ComboBoxItem appItem
-                        => appItem.Tag?.ToString() switch
-                        {
-                            "discord" => VolumeTarget.Discord,
-                            "gaming" => VolumeTarget.Gaming,
-                            "media" => VolumeTarget.Media,
-                            "browser" => VolumeTarget.Browser,
-                            _ => VolumeTarget.Master
-                        },
-                    _ => VolumeTarget.Master
-                };
+                bool isMaster = volItem.Tag?.ToString() == "master";
+                binding.VolumeIsMaster = isMaster;
+
+                if (!isMaster && VolumeAppCombo.SelectedItem is string selectedProcess)
+                    binding.VolumeProcessName = selectedProcess;
             }
 
             // Save into profile

@@ -132,9 +132,12 @@ namespace TrussiApp
                     duration = FormatDuration(timeline.EndTime);
                 }
 
-                Console.WriteLine(
-                    $"[Track] Position: {FormatDuration(TimeSpan.FromSeconds(positionSecs))}" +
-                    $" / {duration} ({progress}%)");
+                if (LogSettings.VerboseTrackLogging)
+                {
+                    Console.WriteLine(
+                        $"[Track] Position: {FormatDuration(timeline.Position)}" +
+                        $" / {duration} ({progress}%)");
+                }
             }
 
             if (title != _lastTitle)

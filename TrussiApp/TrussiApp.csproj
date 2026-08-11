@@ -15,6 +15,9 @@
     <Nullable>enable</Nullable>
     <WindowsPackageType>None</WindowsPackageType>
     <WindowsAppSDKSelfContained>true</WindowsAppSDKSelfContained>
+    <BuiltInComInteropSupport>true</BuiltInComInteropSupport>
+    <SatelliteResourceLanguages>en</SatelliteResourceLanguages>
+    <JsonSerializerIsReflectionEnabledByDefault>true</JsonSerializerIsReflectionEnabledByDefault>
   </PropertyGroup>
 
   <ItemGroup>
@@ -61,6 +64,11 @@
     <PackageReference Include="System.IO.Ports" Version="10.0.8" />
   </ItemGroup>
 
+  <ItemGroup>
+    <TrimmerRootAssembly Include="NAudio" />
+  </ItemGroup>
+
+
   <!--
     Defining the "HasPackageAndPublishMenuAddedByProject" property here allows the Solution
     Explorer "Package and Publish" context menu entry to be enabled for this project even if
@@ -75,7 +83,7 @@
     <WindowsPackageType>None</WindowsPackageType>
     <WindowsAppSDKSelfContained>true</WindowsAppSDKSelfContained>
 
-    <PublishTrimmed>true</PublishTrimmed>
+    <PublishTrimmed>false</PublishTrimmed>
     <TrimMode>partial</TrimMode>
   </PropertyGroup>
 </Project>

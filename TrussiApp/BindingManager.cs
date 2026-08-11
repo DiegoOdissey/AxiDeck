@@ -29,9 +29,10 @@ namespace TrussiApp
         public MediaCommand MediaCmd { get; set; } = MediaCommand.PlayPause;
         public string AppPath { get; set; } = "";
         public string ShortcutKeys { get; set; } = "";
-        public VolumeTarget VolumeTarget { get; set; } = VolumeTarget.Master;
-        public string WebsiteUrl { get; set; } = "";   // ← new
-        public string Label { get; set; } = "";  // shown on deck screen
+        public bool VolumeIsMaster { get; set; } = true;   // ← replaces VolumeTarget enum
+        public string VolumeProcessName { get; set; } = "";     // ← new: process name, no .exe
+        public string WebsiteUrl { get; set; } = "";
+        public string Label { get; set; } = "";
     }
 
     public class BindingProfile
@@ -53,7 +54,8 @@ namespace TrussiApp
     {
         private static string SavePath =>
             Path.Combine(
-                Windows.Storage.ApplicationData.Current.LocalFolder.Path,
+                Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
+                "TrussiApp",
                 "bindings.json");
 
         public BindingProfile Profile { get; private set; } = new();
@@ -89,6 +91,9 @@ namespace TrussiApp
         {
             try
             {
+                string dir = Path.GetDirectoryName(SavePath)!;
+                Directory.CreateDirectory(dir);
+
                 Console.WriteLine($"[Bindings] Saving to: {SavePath}");
                 string json = JsonSerializer.Serialize(Profile,
                     new JsonSerializerOptions { WriteIndented = true });
@@ -146,7 +151,7 @@ namespace TrussiApp
                         ActionExecutor.ExecuteShortcut(binding.ShortcutKeys);
                     break;
                 case ActionType.Volume:
-                    ActionExecutor.ExecuteVolume(binding.VolumeTarget, direction);
+                    ActionExecutor.ExecuteVolume(binding.VolumeIsMaster, binding.VolumeProcessName, direction);
                     break;
                 case ActionType.OpenWebsite:
                     if (!string.IsNullOrWhiteSpace(binding.WebsiteUrl))

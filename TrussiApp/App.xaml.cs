@@ -15,27 +15,23 @@ using Microsoft.UI.Xaml.Shapes;
 // and more about our project templates, see: http://aka.ms/winui-project-info.
 
 namespace TrussiApp;
-
-/// <summary>
-/// Provides application-specific behavior to supplement the default Application class.
-/// </summary>
 public partial class App : Application
 {
     private Window? _window;
 
-    /// <summary>
-    /// Initializes the singleton application object.  This is the first line of authored code
-    /// executed, and as such is the logical equivalent of main() or WinMain().
-    /// </summary>
     public App()
     {
         InitializeComponent();
+        this.UnhandledException += OnUnhandledException;
     }
 
-    /// <summary>
-    /// Invoked when the application is launched.
-    /// </summary>
-    /// <param name="args">Details about the launch request and process.</param>
+    private void OnUnhandledException(object sender,
+    Microsoft.UI.Xaml.UnhandledExceptionEventArgs e)
+    {
+        Console.WriteLine($"[FATAL] Unhandled exception: {e.Exception}");
+        e.Handled = true;
+    }
+
     protected override void OnLaunched(Microsoft.UI.Xaml.LaunchActivatedEventArgs args)
     {
         // Restore developer mode if it was enabled
@@ -55,6 +51,13 @@ public partial class App : Application
                     val == "True")
                 {
                     ConsoleManager.Show(); // Note: ensure ConsoleManager is defined in your project
+                }
+
+                if (prefs != null &&
+                    prefs.TryGetValue("verboseTrackLogging", out string? trackVal) &&
+                    trackVal == "True")
+                {
+                    LogSettings.VerboseTrackLogging = true;
                 }
             }
         }

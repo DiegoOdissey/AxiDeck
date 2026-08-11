@@ -104,18 +104,21 @@ namespace TrussiApp
         // ─────────────────────────────────────────────
         //  TRACK EVENTS
         // ─────────────────────────────────────────────
-        private void OnTrackPlaying(string title, string artist,
-                                    string duration, int progress)
+        private void OnTrackPlaying(string title, string artist, string duration, int progress)
         {
-            Console.WriteLine(
-                $"[App] Track: {title} — {artist} [{duration}] {progress}%");
-            Serial.SendTrack(title, artist, duration, progress);
+            if (LogSettings.VerboseTrackLogging)
+                Console.WriteLine($"[App] Track: {title} — {artist} [{duration}] {progress}%");
+
+            if (Serial.IsConnected)
+                Serial.SendTrack(title, artist, duration, progress);
         }
 
         private void OnTrackStopped()
         {
             Console.WriteLine("[App] Track stopped.");
-            Serial.SendNoTrack();
+
+            if (Serial.IsConnected)
+                Serial.SendNoTrack();
         }
 
         // ─────────────────────────────────────────────

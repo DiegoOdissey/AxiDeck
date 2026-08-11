@@ -163,22 +163,22 @@ namespace TrussiApp
         // ─────────────────────────────────────────────
         //  VOLUME CONTROL  (knob-only, kept here for AxiDeck)
         // ─────────────────────────────────────────────
-        public static void ExecuteVolume(VolumeTarget target, int direction)
+        private static readonly AudioSessionManager _audioSessions = new();
+
+        public static void ExecuteVolume(bool isMaster, string processName, int direction)
         {
             if (direction == 0) return;
 
-            if (target == VolumeTarget.Master)
+            if (isMaster)
             {
                 byte vk = direction > 0 ? (byte)0xAF : (byte)0xAE;
                 KeybdEvent(vk, 0, 0, 0);
                 KeybdEvent(vk, 0, 2, 0);
                 Console.WriteLine($"[Action] Master volume {(direction > 0 ? "up" : "down")}");
             }
-            else
+            else if (!string.IsNullOrWhiteSpace(processName))
             {
-                Console.WriteLine(
-                    $"[Action] App volume {(direction > 0 ? "up" : "down")} " +
-                    $"for {target} — NAudio not yet wired.");
+                _audioSessions.AdjustVolume(processName, direction);
             }
         }
     }
