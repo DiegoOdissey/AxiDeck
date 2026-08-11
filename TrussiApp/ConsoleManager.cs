@@ -2,7 +2,7 @@ using System;
 using System.IO;
 using System.Runtime.InteropServices;
 
-namespace AxiApp
+namespace TrussiApp
 {
     public static class ConsoleManager
     {
@@ -29,7 +29,7 @@ namespace AxiApp
             Console.SetError(new StreamWriter(Console.OpenStandardError())
             { AutoFlush = true });
 
-            Console.Title = "AxiApp — Developer Console";
+            Console.Title = "TrussiApp — Developer Console";
             Console.WriteLine("[Dev] Developer console enabled.");
             Console.WriteLine("[Dev] All log output will appear here.");
             Console.WriteLine(new string('─', 60));

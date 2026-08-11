@@ -5,7 +5,7 @@ using Microsoft.UI.Xaml.Navigation;
 using Microsoft.Win32;
 using System;
 
-namespace AxiApp.Pages
+namespace TrussiApp.Pages
 {
     public sealed partial class SettingsPage : Page
     {
@@ -111,7 +111,7 @@ namespace AxiApp.Pages
         private static bool IsStartupEnabled()
         {
             using var key = Registry.CurrentUser.OpenSubKey(StartupKey);
-            return key?.GetValue("AxiApp") != null;
+            return key?.GetValue("TrussiApp") != null;
         }
 
         private static void SetStartupEnabled(bool enable)
@@ -122,12 +122,12 @@ namespace AxiApp.Pages
             {
                 string exe = System.Diagnostics.Process.GetCurrentProcess()
                                    .MainModule!.FileName;
-                key.SetValue("AxiApp", $"\"{exe}\"");
+                key.SetValue("TrussiApp", $"\"{exe}\"");
                 Console.WriteLine($"[Settings] Startup registered: {exe}");
             }
             else
             {
-                key.DeleteValue("AxiApp", false);
+                key.DeleteValue("TrussiApp", false);
                 Console.WriteLine("[Settings] Startup removed.");
             }
         }

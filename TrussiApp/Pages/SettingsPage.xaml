@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Page
-    x:Class="AxiApp.Pages.SettingsPage"
+    x:Class="TrussiApp.Pages.SettingsPage"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     Background="Transparent">
@@ -39,7 +39,7 @@
                     <TextBlock Text="Avvia con Windows"
                                FontSize="13"
                             Foreground="White"/>
-                    <TextBlock Text="Avvia AxiApp automaticamente all'accesso"
+                    <TextBlock Text="Avvia TrussiApp automaticamente all'accesso"
                                FontSize="11"
                             Foreground="#666666"/>
                 </StackPanel>
@@ -198,7 +198,7 @@
 
         <!-- Version -->
         <TextBlock Grid.Row="3"
-                   Text="AxiApp v0.1 — github.com/DiegoOdissey/AxiDeck"
+                   Text="TrussiApp v0.1 — github.com/DiegoOdissey/AxiDeck"
                    FontSize="11"
                 Foreground="#333333"
                    VerticalAlignment="Bottom"/>

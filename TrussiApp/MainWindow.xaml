@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Window
-        x:Class="AxiApp.MainWindow"
+        x:Class="TrussiApp.MainWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        Title="AxiApp">
+        Title="TrussiApp">
 
         <Grid x:Name="RootGrid">
                 <Grid.ColumnDefinitions>

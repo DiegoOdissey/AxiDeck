@@ -5,7 +5,7 @@ using System.Text.Json;
 using System.Threading.Tasks;
 using Windows.Media.Control;
 
-namespace AxiApp
+namespace TrussiApp
 {
     // ─────────────────────────────────────────────
     //  DATA MODELS
@@ -134,28 +134,24 @@ namespace AxiApp
             {
                 case ActionType.None:
                     break;
-
                 case ActionType.Media:
-                    ExecuteMedia(binding.MediaCmd);
+                    ActionExecutor.ExecuteMedia(binding.MediaCmd);
                     break;
-
                 case ActionType.LaunchApp:
                     if (!string.IsNullOrEmpty(binding.AppPath))
-                        ExecuteLaunchApp(binding.AppPath);
+                        ActionExecutor.ExecuteLaunchApp(binding.AppPath);
                     break;
-
                 case ActionType.Shortcut:
                     if (!string.IsNullOrEmpty(binding.ShortcutKeys))
-                        ExecuteShortcut(binding.ShortcutKeys);
+                        ActionExecutor.ExecuteShortcut(binding.ShortcutKeys);
                     break;
-
                 case ActionType.Volume:
-                    ExecuteVolume(binding.VolumeTarget, direction);
+                    ActionExecutor.ExecuteVolume(binding.VolumeTarget, direction);
                     break;
                 case ActionType.OpenWebsite:
                     if (!string.IsNullOrWhiteSpace(binding.WebsiteUrl))
-                        ExecuteOpenWebsite(binding.WebsiteUrl);
-                break;
+                        ActionExecutor.ExecuteOpenWebsite(binding.WebsiteUrl);
+                    break;
             }
         }
 

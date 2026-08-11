@@ -16,7 +16,7 @@
   <mp:PhoneIdentity PhoneProductId="4E20DDBF-BF1E-4263-9466-329A89B9114D" PhonePublisherId="00000000-0000-0000-0000-000000000000"/>
 
   <Properties>
-    <DisplayName>AxiApp</DisplayName>
+    <DisplayName>TrussiApp</DisplayName>
     <PublisherDisplayName>AppPublisher</PublisherDisplayName>
     <Logo>Assets\StoreLogo.png</Logo>
   </Properties>
@@ -35,8 +35,8 @@
       Executable="$targetnametoken$.exe"
       EntryPoint="$targetentrypoint$">
       <uap:VisualElements
-        DisplayName="AxiApp"
-        Description="AxiApp"
+        DisplayName="TrussiApp"
+        Description="TrussiApp"
         BackgroundColor="transparent"
         Square150x150Logo="Assets\Square150x150Logo.png"
         Square44x44Logo="Assets\Square44x44Logo.png">

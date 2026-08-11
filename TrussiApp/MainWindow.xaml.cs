@@ -2,9 +2,9 @@ using Microsoft.UI;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Media;
 using System;
-using AxiApp.Pages;
+using TrussiApp.Pages;
 
-namespace AxiApp
+namespace TrussiApp
 {
     public sealed partial class MainWindow : Window
     {
@@ -17,6 +17,7 @@ namespace AxiApp
         public readonly TrackDetector Tracker = new();
         public readonly BindingManager Bindings = new();
         public readonly TrayManager Tray = new();
+        public readonly PorcelliBindingManager PorcelliBindings = new();
 
         public bool NotificationsEnabled { get; set; } = true;
 
@@ -31,7 +32,7 @@ namespace AxiApp
             SetWindowSize(1400, 800);
             RootGrid.RequestedTheme = ElementTheme.Dark;
 
-            Console.WriteLine("[App] AxiApp starting...");
+            Console.WriteLine("[App] TrussiApp starting...");
 
             // Load saved bindings
             Bindings.Load();
@@ -69,10 +70,10 @@ namespace AxiApp
                 $"[App] Connection: {(connected ? "CONNECTED" : "DISCONNECTED")}");
 
             if (NotificationsEnabled)
-                Tray.Notify("AxiApp",
+                Tray.Notify("TrussiApp",
                     connected ? "AxiDeck connesso." : "AxiDeck disconnesso.");
 
-            Tray.UpdateTooltip(connected ? "AxiApp — AxiDeck connesso" : "AxiApp");
+            Tray.UpdateTooltip(connected ? "TrussiApp — AxiDeck connesso" : "TrussiApp");
 
             // Send labels to deck on connect
             if (connected)

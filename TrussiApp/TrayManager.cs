@@ -4,7 +4,7 @@ using System.Drawing;
 using System.Windows.Forms;
 using Application = System.Windows.Forms.Application;
 
-namespace AxiApp
+namespace TrussiApp
 {
     public class TrayManager : IDisposable
     {
@@ -21,15 +21,15 @@ namespace AxiApp
 
             // Build context menu
             _menu = new ContextMenuStrip();
-            _menu.Items.Add("Apri AxiApp", null, (_, _) => ShowWindow());
+            _menu.Items.Add("Apri TrussiApp", null, (_, _) => ShowWindow());
             _menu.Items.Add(new ToolStripSeparator());
             _menu.Items.Add("Esci", null, (_, _) => ExitApp());
 
             // Build tray icon
             _trayIcon = new NotifyIcon
             {
-                Icon = SystemIcons.Application,
-                Text = "AxiApp",
+                Icon = new Icon(Path.Combine(AppContext.BaseDirectory, "Assets", "AppIcon.ico")),
+                Text = "TrussiApp",
                 Visible = true,
                 ContextMenuStrip = _menu
             };

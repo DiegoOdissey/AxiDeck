@@ -1,9 +1,9 @@
 {
   "profiles": {
-    "AxiApp (Package)": {
+    "TrussiApp (Package)": {
       "commandName": "MsixPackage"
     },
-    "AxiApp (Unpackaged)": {
+    "TrussiApp (Unpackaged)": {
       "commandName": "Project"
     }
   }

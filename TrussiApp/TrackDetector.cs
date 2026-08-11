@@ -3,7 +3,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Windows.Media.Control;
 
-namespace AxiApp
+namespace TrussiApp
 {
     public class TrackDetector
     {

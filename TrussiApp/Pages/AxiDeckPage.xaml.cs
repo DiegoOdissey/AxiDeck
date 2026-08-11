@@ -6,10 +6,10 @@ using Microsoft.UI.Xaml.Navigation;
 using System;
 using System.Collections.Generic;
 using Windows.Storage.Pickers;
-using AxiApp;
+using TrussiApp;
 using Microsoft.UI.Xaml.Input;
 
-namespace AxiApp.Pages
+namespace TrussiApp.Pages
 {
     // Which input is currently selected
     public enum InputType { Button, Knob }

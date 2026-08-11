@@ -1,22 +1,19 @@
-# AxiDeck
+# TrussiApp
 
-A custom hardware control deck built around an Arduino Nano — physical knobs and buttons that talk to your PC over serial.
+A custom WinUI application that controls Trussi devices (which are currently not for sale, obviously). Every device appears as a card in the home screen, connected devices will be automatically recognized and marked with a green dot. Each device can be highly customized, and it's possible to assign for each button a determined action. Right now the buttons have:
 
-```
-┌──────────────────────────────────┐
-│  [ btn ]   [ btn ]   [ btn ]     │
-│                                  │
-│  [ btn ]   [ btn ]   [ btn ]     |
-|                                  |
-|      [ OLED ]      [ OLED ]      |
-|                                  |
-|  [ knob 1]          [ knob 2]    |
-└──────────────────────────────────┘
+- **Media Control**: Control media playback like videos and music, for example Previous, Pause/Play and Next.
+- **Open Application**: Open an .exe file
+- **Shortcut**: Execute a keyboard shortcut combination (Alt + F4, Shift + F5, etc...)
+- **Open website**: Open a website with the OS's default browser, given the link.
 
-        ↕  Data transmission with USB / Serial
+Knob buttons have different options:
+- **Main volume**: The knob will control Windows volume
+- *Application volume*: **Yet to implement**, the knob will control a specific process name (which can be used to control Discord's volume, Gaming, Browser, etc...)
 
-   AxiApp (Windows tray/GUI)
-```
+Knobs featuring a press button have also the normal buttons options.
+
+Devices featuring screens (like the AxiDeck) have an option to show a label for each button on said screen.
 
 ---
 
@@ -25,31 +22,32 @@ A custom hardware control deck built around an Arduino Nano — physical knobs a
 ```
 AxiDeck/
 ├── firmware/          Arduino sketch (.ino) — runs on the Nano
-├── AxiApp/            C# WinUI 3 desktop app (current)
-└── AxiApp-python/     Python tray app (deprecated)
+├── TrussiApp/            C# WinUI 3 desktop app (current)
+└── TrussiApp-python/     Python tray app (deprecated)
 ```
 
 ---
 
-## Firmware
+## AxiDeck Firmware
 
-Written for the **Arduino Nano**. Handles:
+The AxiDeck firmware is written for **Arduino Nano**. It currently features:
 
 - Serial handshake (`CONNECT`)
-- Time sync (`TIME:HH:MM`)
+- Current time syncronization
+- Currert song (Spotify/Apple Music/Youtube) synchronization, which appears on Screen #1 (Left)
 - Knob and button event reporting back to the host
 - OLED screen managing with TCA multiplexer
 
-Flash with the Arduino IDE or CLI.
+The firmware can be flashed with the Arduino IDE.
 
-## External libraries required:
+### External libraries required:
 - Wire
 - Adafuit_GFX
 - Adafruit_SSD1306
 
 ---
 
-## AxiApp — Windows Desktop (C# / WinUI 3)
+## TrussiApp — Windows Desktop (C# / WinUI 3)
 
 The current host application. Runs on Windows 10/11.
 
@@ -60,43 +58,15 @@ The current host application. Runs on Windows 10/11.
 **Run from source**
 
 ```bash
-cd AxiApp
+cd TrussiApp
 dotnet run
 ```
 
 **Features**
-- Auto-detects the Arduino on any COM port
-- Serial handshake + periodic time sync
+- Auto-detects the devices on any COM port
+- Serial handshake + periodic synchronization
 - Reconnects automatically on disconnect
-- Collapsible serial log
-- Native Fluent / WinUI 3 UI
-
----
-
-## AxiApp Python — Deprecated
-
-The original prototype, built with `pyserial` and `pystray`. Kept here for reference.
-
-```bash
-cd AxiApp-python
-pip install pyserial pystray pillow
-python main.py
-```
-
-Superseded by the C# version. Not actively maintained.
-
----
-
-## Serial Protocol (examples)
-
-| Direction     | Message         | Description                        |
-|---------------|-----------------|------------------------------------|
-| PC → Arduino  | `CONNECT`       | Handshake on connection            |
-| PC → Arduino  | `TIME:HH:MM`    | Current time sync (every 30s)      |
-| Arduino → PC  | `KNOB1+`        | Knob 1 turned clockwise            |
-| Arduino → PC  | `BTN1`          | Button 1 pressed                   |
-
----
+- Developer mode (live log debugging)
 
 ## License
 

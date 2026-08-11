@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Page
-        x:Class="AxiApp.Pages.AxiDeckPage"
+        x:Class="TrussiApp.Pages.AxiDeckPage"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         Background="Transparent">
@@ -45,7 +45,7 @@
 
                         <Border Grid.Column="3"
                                 x:Name="StatusBadge"
-                                CornerRadius="20"
+                                CornerRadius="14"
                                 Background="#2A1A1A"
                                 Padding="10,4">
                                 <TextBlock x:Name="StatusBadgeText"

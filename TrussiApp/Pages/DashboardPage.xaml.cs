@@ -1,11 +1,11 @@
-using AxiApp.Pages;
+using TrussiApp.Pages;
 using Microsoft.UI;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Media;
 using Microsoft.UI.Xaml.Navigation;
 
-namespace AxiApp.Pages
+namespace TrussiApp.Pages
 {
     public sealed partial class DashboardPage : Page
     {
@@ -23,10 +23,9 @@ namespace AxiApp.Pages
             {
                 _main = main;
                 _main.Serial.ConnectionChanged += OnConnectionChanged;
-
+                
                 // Check current state right now, don't wait for next event
                 UpdateAxiDeckDot(_main.Serial.IsConnected);
-                UpdatePorcelliDashDot(false);
             }
         }
 
@@ -49,21 +48,14 @@ namespace AxiApp.Pages
                 : new SolidColorBrush(ColorHelper.FromArgb(255, 200, 50, 50));
         }
 
-        private void UpdatePorcelliDashDot(bool connected)
-        {
-            PorcelliDashDot.Fill = connected
-                ? new SolidColorBrush(Colors.LimeGreen)
-                : new SolidColorBrush(ColorHelper.FromArgb(255, 200, 50, 50));
-        }
-
         private void AxiDeckCard_Click(object sender, RoutedEventArgs e)
         {
             _main?.OpenDetailPanel(typeof(AxiDeckPage));
         }
 
-        private void PorcelliDashCard_Click(object sender, RoutedEventArgs e)
+        private void PorcelliBoardCard_Click(object sender, RoutedEventArgs e)
         {
-            _main?.OpenDetailPanel(typeof(PorcelliDashPage));
+            _main?.OpenDetailPanel(typeof(PorcelliBoardPage));
         }
     }
 }
