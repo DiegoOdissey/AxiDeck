@@ -1,6 +1,9 @@
 # TrussiApp
+<p align="center">
+  <img src="https://i.imgur.com/If1GAt0.png">
+</p>
 
-A custom WinUI application that controls Trussi devices (which are currently not for sale, obviously). Every device appears as a card in the home screen, connected devices will be automatically recognized and marked with a green dot. Each device can be highly customized, and it's possible to assign for each button a determined action. Right now the buttons have:
+A custom WinUI application that controls Trussi devices (which are currently not for sale, obviously). Every device appears as a card in the home screen, connected devices will be automatically recognized and marked with a green dot. Each device can be highly customized, and it's possible to assign for each button a determined action. Right now the buttons can be paired with those actions:
 
 - **Media Control**: Control media playback like videos and music, for example Previous, Pause/Play and Next.
 - **Open Application**: Open an .exe file
@@ -29,6 +32,10 @@ AxiDeck/
 ---
 
 ## AxiDeck Firmware
+
+<p align="center">
+  <img height=400 src="https://i.imgur.com/c3I0nDB.png">
+</p>
 
 The AxiDeck firmware is written for **Arduino Nano**. It currently features:
 
